@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  
+  body {
+    @apply font-body bg-secondary text-gray-100 relative;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-bold tracking-wide;
+  }
+}
+
+@layer components {
+  .container {
+    @apply px-4 md:px-6 mx-auto max-w-7xl;
+  }
+  
+  .btn {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded font-heading font-semibold text-lg transition-all duration-300 uppercase tracking-wider;
+  }
+  
+  .btn-primary {
+    @apply btn bg-primary text-secondary-dark hover:bg-primary-dark;
+  }
+  
+  .btn-secondary {
+    @apply btn bg-secondary border border-primary text-primary hover:bg-secondary-light;
+  }
+  
+  .btn-accent {
+    @apply btn bg-accent text-white hover:bg-accent-dark;
+  }
+  
+  .input {
+    @apply w-full px-4 py-3 bg-secondary-light border border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-primary;
+  }
+  
+  .product-card {
+    @apply bg-secondary-light rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/20;
+  }
+  
+  .nav-link {
+    @apply font-heading text-lg uppercase tracking-wide hover:text-primary transition-colors duration-200;
+  }
+  
+  .section-title {
+    @apply text-3xl md:text-4xl lg:text-5xl font-bold mb-6 md:mb-10 font-heading uppercase;
+  }
+  
+  .category-title {
+    @apply text-xl md:text-2xl font-bold mb-4 font-heading uppercase tracking-wider;
+  }
+}
+
+.shine-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-effect::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 20%;
+  height: 200%;
+  opacity: 0;
+  transform: rotate(30deg);
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.13) 0%,
+    rgba(255, 255, 255, 0.13) 77%,
+    rgba(255, 255, 255, 0.5) 92%,
+    rgba(255, 255, 255, 0.0) 100%
+  );
+}
+
+.shine-effect:hover::after {
+  opacity: 1;
+  left: 130%;
+  transition: left 0.7s ease-in-out;
+}
+
+.octagon-clip {
+  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+}
+
+.product-hover-zoom img {
+  transition: transform 0.5s ease;
+}
+
+.product-hover-zoom:hover img {
+  transform: scale(1.05);
+}
