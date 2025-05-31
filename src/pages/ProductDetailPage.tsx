@@ -2,39 +2,183 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Star, Truck, ShieldCheck, ArrowLeft, Share2, Heart } from 'lucide-react';
-import { products } from '../data/products';
 
-const fadeIn = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.5 } }
-};
+// Define product type
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  longDescription?: string;
+  price: number;
+  originalPrice?: number;
+  image: string;
+  images?: string[];
+  category: 'tshirt' | 'shorts' | 'hoodie';
+  sizes: string[];
+  colors: {
+    name: string;
+    code: string;
+    selected?: boolean;
+  }[];
+  rating: number;
+  reviewCount: number;
+  isNew?: boolean;
+}
+
+// Mock products data
+const products: Product[] = [
+  {
+    id: 'tshirt-1',
+    name: 'Fight Ready T-Shirt',
+    description: 'Premium cotton t-shirt for training and casual wear',
+    longDescription: 'Our Fight Ready T-Shirt is made from 100% premium combed cotton for maximum comfort and durability. The fabric is breathable and moisture-wicking, keeping you cool during intense workouts. Features reinforced stitching and a tagless design to prevent irritation.',
+    price: 29.99,
+    originalPrice: 39.99,
+    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&h=800&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1583744946564-b52d01e2da64?w=800&h=800&fit=crop'
+    ],
+    category: 'tshirt',
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    colors: [
+      { name: 'Black', code: '#000000', selected: true },
+      { name: 'White', code: '#FFFFFF' },
+      { name: 'Navy', code: '#001F3F' }
+    ],
+    rating: 4.5,
+    reviewCount: 124,
+    isNew: true
+  },
+  {
+    id: 'shorts-1',
+    name: 'Training Shorts',
+    description: 'Performance shorts designed for MMA training',
+    longDescription: 'These Training Shorts feature a lightweight, quick-drying fabric with 4-way stretch for maximum mobility. The waistband has an internal drawstring for secure fit, and the gusseted crotch prevents ride-up during movement. Includes two side pockets and one secure back pocket.',
+    price: 44.99,
+    originalPrice: 54.99,
+    image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=800&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800&h=800&fit=crop'
+    ],
+    category: 'shorts',
+    sizes: ['S', 'M', 'L', 'XL'],
+    colors: [
+      { name: 'Black', code: '#000000', selected: true },
+      { name: 'Gray', code: '#808080' },
+      { name: 'Red', code: '#FF0000' }
+    ],
+    rating: 4.7,
+    reviewCount: 89
+  },
+  {
+    id: 'hoodie-1',
+    name: 'Champion Hoodie',
+    description: 'Heavyweight hoodie for cold weather training',
+    longDescription: 'The Champion Hoodie is crafted from heavyweight 80% cotton/20% polyester blend for warmth and durability. Features a double-lined hood, kangaroo pocket, and reinforced stitching at stress points. The interior is brushed for extra softness against the skin.',
+    price: 59.99,
+    originalPrice: 69.99,
+    image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=800&h=800&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=800&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1620799139834-6b8f844802e1?w=800&h=800&fit=crop'
+    ],
+    category: 'hoodie',
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    colors: [
+      { name: 'Black', code: '#000000', selected: true },
+      { name: 'Charcoal', code: '#36454F' },
+      { name: 'Navy', code: '#001F3F' }
+    ],
+    rating: 4.8,
+    reviewCount: 156,
+    isNew: true
+  }
+];
+
+// Cart item type
+interface CartItem extends Product {
+  selectedSize: string;
+  selectedColor: string;
+  quantity: number;
+}
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [product, setProduct] = useState(products.find(p => p.id === id));
+  const [product, setProduct] = useState<Product | undefined>();
   const [selectedSize, setSelectedSize] = useState<string>('');
+  const [selectedColor, setSelectedColor] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'reviews'>('description');
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [isFavorite, setIsFavorite] = useState(false);
   
   useEffect(() => {
-    // Scroll to top when component mounts
     window.scrollTo(0, 0);
-    
-    // Find the product based on ID
     const foundProduct = products.find(p => p.id === id);
     setProduct(foundProduct);
     
-    // Reset state when product changes
-    if (foundProduct && foundProduct.sizes && foundProduct.sizes.length > 0) {
+    if (foundProduct) {
       setSelectedSize(foundProduct.sizes[0]);
-    } else {
-      setSelectedSize('');
+      setSelectedColor(foundProduct.colors[0].name);
     }
+    
     setQuantity(1);
     setActiveImageIndex(0);
   }, [id]);
   
+  const addToCart = () => {
+    if (!product) return;
+    
+    const newItem: CartItem = {
+      ...product,
+      selectedSize,
+      selectedColor,
+      quantity
+    };
+    
+    setCart(prevCart => {
+      // Check if item already exists in cart
+      const existingItemIndex = prevCart.findIndex(
+        item => item.id === product.id && 
+               item.selectedSize === selectedSize && 
+               item.selectedColor === selectedColor
+      );
+      
+      if (existingItemIndex >= 0) {
+        const updatedCart = [...prevCart];
+        updatedCart[existingItemIndex].quantity += quantity;
+        return updatedCart;
+      }
+      
+      return [...prevCart, newItem];
+    });
+    
+    // Show feedback to user
+    alert(`${quantity} ${product.name} (${selectedSize}, ${selectedColor}) added to cart!`);
+  };
+  
+  const decreaseQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(quantity - 1);
+    }
+  };
+
+  const increaseQuantity = () => {
+    setQuantity(quantity + 1);
+  };
+  
+  const toggleFavorite = () => {
+    setIsFavorite(!isFavorite);
+  };
+  
+  const relatedProducts = products
+    .filter(p => p.category === product?.category && p.id !== product?.id)
+    .slice(0, 4);
+
   if (!product) {
     return (
       <div className="container py-20 text-center">
@@ -47,20 +191,6 @@ const ProductDetailPage: React.FC = () => {
     );
   }
 
-  const decreaseQuantity = () => {
-    if (quantity > 1) {
-      setQuantity(quantity - 1);
-    }
-  };
-
-  const increaseQuantity = () => {
-    setQuantity(quantity + 1);
-  };
-  
-  const relatedProducts = products
-    .filter(p => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
-
   return (
     <div className="bg-secondary min-h-screen py-12">
       <div className="container">
@@ -72,7 +202,8 @@ const ProductDetailPage: React.FC = () => {
             <Link to="/products" className="hover:text-primary">Products</Link>
             <span className="mx-2">/</span>
             <Link to={`/products?category=${product.category}`} className="hover:text-primary capitalize">
-              {product.category}
+              {product.category === 'tshirt' ? 'T-Shirts' : 
+               product.category === 'shorts' ? 'Shorts' : 'Hoodies'}
             </Link>
             <span className="mx-2">/</span>
             <span className="text-gray-300">{product.name}</span>
@@ -119,9 +250,8 @@ const ProductDetailPage: React.FC = () => {
           {/* Product Info */}
           <motion.div 
             className="lg:w-1/2"
-            variants={fadeIn}
-            initial="initial"
-            animate="animate"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0, transition: { duration: 0.5 } }}
           >
             <div className="flex justify-between items-start">
               <div>
@@ -135,8 +265,11 @@ const ProductDetailPage: React.FC = () => {
                 </h1>
               </div>
               <div className="flex space-x-2">
-                <button className="p-2 rounded-full bg-secondary-light text-gray-300 hover:text-primary transition-colors">
-                  <Heart size={20} />
+                <button 
+                  className={`p-2 rounded-full bg-secondary-light text-gray-300 hover:text-primary transition-colors ${isFavorite ? 'text-accent' : ''}`}
+                  onClick={toggleFavorite}
+                >
+                  <Heart size={20} fill={isFavorite ? 'currentColor' : 'none'} />
                 </button>
                 <button className="p-2 rounded-full bg-secondary-light text-gray-300 hover:text-primary transition-colors">
                   <Share2 size={20} />
@@ -182,45 +315,42 @@ const ProductDetailPage: React.FC = () => {
             <p className="text-gray-300 mb-6">{product.description}</p>
             
             {/* Size Selection */}
-            {product.sizes && product.sizes.length > 0 && (
-              <div className="mb-6">
-                <h3 className="font-heading text-lg mb-2">Size</h3>
-                <div className="flex flex-wrap gap-2">
-                  {product.sizes.map(size => (
-                    <button
-                      key={size}
-                      className={`px-4 py-2 border ${
-                        selectedSize === size
-                          ? 'border-primary bg-primary text-secondary-dark font-medium'
-                          : 'border-gray-600 text-gray-300 hover:border-primary'
-                      } rounded-md transition-colors`}
-                      onClick={() => setSelectedSize(size)}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
+            <div className="mb-6">
+              <h3 className="font-heading text-lg mb-2">Size</h3>
+              <div className="flex flex-wrap gap-2">
+                {product.sizes.map(size => (
+                  <button
+                    key={size}
+                    className={`px-4 py-2 border ${
+                      selectedSize === size
+                        ? 'border-primary bg-primary text-secondary-dark font-medium'
+                        : 'border-gray-600 text-gray-300 hover:border-primary'
+                    } rounded-md transition-colors`}
+                    onClick={() => setSelectedSize(size)}
+                  >
+                    {size}
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
             
             {/* Color Selection */}
-            {product.colors && product.colors.length > 0 && (
-              <div className="mb-6">
-                <h3 className="font-heading text-lg mb-2">Color</h3>
-                <div className="flex flex-wrap gap-2">
-                  {product.colors.map(color => (
-                    <button
-                      key={color.code}
-                      className={`w-10 h-10 rounded-full border-2 ${
-                        color.selected ? 'border-primary' : 'border-transparent'
-                      }`}
-                      style={{ backgroundColor: color.code }}
-                      title={color.name}
-                    />
-                  ))}
-                </div>
+            <div className="mb-6">
+              <h3 className="font-heading text-lg mb-2">Color</h3>
+              <div className="flex flex-wrap gap-2">
+                {product.colors.map(color => (
+                  <button
+                    key={color.code}
+                    className={`w-10 h-10 rounded-full border-2 ${
+                      selectedColor === color.name ? 'border-primary' : 'border-transparent'
+                    }`}
+                    style={{ backgroundColor: color.code }}
+                    title={color.name}
+                    onClick={() => setSelectedColor(color.name)}
+                  />
+                ))}
               </div>
-            )}
+            </div>
             
             {/* Quantity & Add to Cart */}
             <div className="flex flex-col md:flex-row gap-4 mb-8">
@@ -245,11 +375,21 @@ const ProductDetailPage: React.FC = () => {
                 </button>
               </div>
               
-              <button className="flex-grow btn-primary">
+              <button 
+                className="flex-grow btn-primary"
+                onClick={addToCart}
+              >
                 ADD TO CART
               </button>
               
-              <button className="btn-secondary">
+              <button 
+                className="btn-secondary"
+                onClick={() => {
+                  addToCart();
+                  // In a real app, you would navigate to checkout
+                  alert('Proceeding to checkout!');
+                }}
+              >
                 BUY NOW
               </button>
             </div>
@@ -299,11 +439,56 @@ const ProductDetailPage: React.FC = () => {
                 {activeTab === 'description' && (
                   <div>
                     <p className="text-gray-300 mb-4">
-                      {product.longDescription || product.description}
+                      {product.longDescription}
                     </p>
-                    <p className="text-gray-300">
-                      Our premium {product.name} is designed for serious fighters who demand the best. Crafted with high-quality materials and built to withstand the toughest training sessions and fights. The ergonomic design ensures maximum comfort and protection, allowing you to focus on your performance.
-                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      <div>
+                        <h4 className="font-heading font-bold text-gray-100 mb-2">Features:</h4>
+                        <ul className="text-gray-300 space-y-2">
+                          <li className="flex items-start">
+                            <span className="text-primary mr-2">✓</span>
+                            {product.category === 'tshirt' ? '100% premium combed cotton' : 
+                             product.category === 'shorts' ? 'Quick-drying 4-way stretch fabric' : 
+                             '80% cotton/20% polyester heavyweight blend'}
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-primary mr-2">✓</span>
+                            {product.category === 'tshirt' ? 'Reinforced stitching for durability' : 
+                             product.category === 'shorts' ? 'Gusseted crotch for mobility' : 
+                             'Double-lined hood for extra warmth'}
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-primary mr-2">✓</span>
+                            {product.category === 'tshirt' ? 'Tagless design to prevent irritation' : 
+                             product.category === 'shorts' ? 'Secure pockets for essentials' : 
+                             'Brushed interior for softness'}
+                          </li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="font-heading font-bold text-gray-100 mb-2">Best For:</h4>
+                        <ul className="text-gray-300 space-y-2">
+                          <li className="flex items-start">
+                            <span className="text-primary mr-2">✓</span>
+                            {product.category === 'tshirt' ? 'Training sessions' : 
+                             product.category === 'shorts' ? 'MMA and grappling' : 
+                             'Cold weather workouts'}
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-primary mr-2">✓</span>
+                            {product.category === 'tshirt' ? 'Everyday casual wear' : 
+                             product.category === 'shorts' ? 'High-intensity conditioning' : 
+                             'Post-training recovery'}
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-primary mr-2">✓</span>
+                            {product.category === 'tshirt' ? 'Layering under fight gear' : 
+                             product.category === 'shorts' ? 'Competition preparation' : 
+                             'Streetwear fashion'}
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 )}
                 
@@ -311,26 +496,49 @@ const ProductDetailPage: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                     <div>
                       <h3 className="font-heading font-medium mb-2">Materials</h3>
-                      <p className="text-gray-300">Premium synthetic leather, shock-absorbing foam</p>
+                      <p className="text-gray-300">
+                        {product.category === 'tshirt' ? '100% premium combed cotton' : 
+                         product.category === 'shorts' ? '92% polyester, 8% spandex' : 
+                         '80% cotton, 20% polyester'}
+                      </p>
                     </div>
                     <div>
                       <h3 className="font-heading font-medium mb-2">Weight</h3>
-                      <p className="text-gray-300">12oz - 16oz (depending on size)</p>
+                      <p className="text-gray-300">
+                        {product.category === 'tshirt' ? '180 gsm (grams per square meter)' : 
+                         product.category === 'shorts' ? 'Lightweight (approx. 250g)' : 
+                         'Heavyweight (approx. 450g)'}
+                      </p>
                     </div>
                     <div>
                       <h3 className="font-heading font-medium mb-2">Care Instructions</h3>
-                      <p className="text-gray-300">Wipe clean with damp cloth, air dry away from direct sunlight</p>
+                      <p className="text-gray-300">
+                        {product.category === 'tshirt' ? 'Machine wash cold, tumble dry low' : 
+                         product.category === 'shorts' ? 'Machine wash cold, hang to dry' : 
+                         'Machine wash cold, tumble dry low'}
+                      </p>
                     </div>
                     <div>
                       <h3 className="font-heading font-medium mb-2">Country of Origin</h3>
                       <p className="text-gray-300">USA</p>
+                    </div>
+                    <div>
+                      <h3 className="font-heading font-medium mb-2">Fit</h3>
+                      <p className="text-gray-300">
+                        {product.category === 'tshirt' ? 'Regular fit' : 
+                         product.category === 'shorts' ? 'Athletic fit' : 
+                         'Standard fit'}
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="font-heading font-medium mb-2">Sizing</h3>
+                      <p className="text-gray-300">True to size (refer to size chart)</p>
                     </div>
                   </div>
                 )}
                 
                 {activeTab === 'reviews' && (
                   <div>
-                    {/* Review Summary */}
                     <div className="flex flex-col md:flex-row gap-8 mb-8">
                       <div className="md:w-1/3 text-center">
                         <div className="text-5xl font-bold text-primary mb-2">{product.rating.toFixed(1)}</div>
@@ -366,69 +574,46 @@ const ProductDetailPage: React.FC = () => {
                       </div>
                     </div>
                     
-                    {/* Reviews List */}
                     <div className="space-y-6">
-                      {/* Review 1 */}
                       <div className="border-b border-gray-700 pb-6">
                         <div className="flex justify-between mb-2">
-                          <h4 className="font-heading font-bold">John D.</h4>
-                          <span className="text-gray-400">2 weeks ago</span>
+                          <h4 className="font-heading font-bold">Alex M.</h4>
+                          <span className="text-gray-400">1 week ago</span>
                         </div>
                         <div className="flex text-primary mb-2">
                           {[...Array(5)].map((_, i) => (
-                            <Star 
-                              key={i} 
-                              size={16} 
-                              fill="currentColor" 
-                            />
+                            <Star key={i} size={16} fill="currentColor" />
                           ))}
                         </div>
                         <p className="text-gray-300">
-                          Absolutely love these gloves! The quality is top-notch and they provide excellent protection during sparring. Highly recommend for any serious fighter.
+                          {product.category === 'tshirt' ? 
+                           'This is the most comfortable training shirt I own. The fabric is soft but durable, and it holds up well after multiple washes.' : 
+                           product.category === 'shorts' ? 
+                           'Perfect for MMA training! The stretch allows for full range of motion, and the fabric dries incredibly fast.' : 
+                           'The heavyweight material is perfect for cold mornings. The hood is roomy enough to fit over my headgear.'}
                         </p>
                       </div>
                       
-                      {/* Review 2 */}
                       <div className="border-b border-gray-700 pb-6">
                         <div className="flex justify-between mb-2">
-                          <h4 className="font-heading font-bold">Sarah M.</h4>
-                          <span className="text-gray-400">1 month ago</span>
+                          <h4 className="font-heading font-bold">Jamie R.</h4>
+                          <span className="text-gray-400">3 weeks ago</span>
                         </div>
                         <div className="flex text-primary mb-2">
-                          {[...Array(5)].map((_, i) => (
-                            <Star 
-                              key={i} 
-                              size={16} 
-                              fill={i < 4 ? 'currentColor' : 'none'} 
-                            />
+                          {[...Array(4)].map((_, i) => (
+                            <Star key={i} size={16} fill="currentColor" />
                           ))}
+                          <Star size={16} fill="none" />
                         </div>
                         <p className="text-gray-300">
-                          Great product overall. Comfortable and durable. The only reason I'm giving 4 stars is because they took a while to break in. After that, they're perfect.
+                          {product.category === 'tshirt' ? 
+                           'Great shirt overall. The fit is slightly looser than expected, but the quality is excellent.' : 
+                           product.category === 'shorts' ? 
+                           'Love these shorts! Only giving 4 stars because the pockets could be deeper to hold more items securely.' : 
+                           'Super warm and comfortable. The only minor issue is the drawstrings could be a bit longer for easier tying.'}
                         </p>
                       </div>
                       
-                      {/* Review 3 */}
-                      <div>
-                        <div className="flex justify-between mb-2">
-                          <h4 className="font-heading font-bold">Mike R.</h4>
-                          <span className="text-gray-400">2 months ago</span>
-                        </div>
-                        <div className="flex text-primary mb-2">
-                          {[...Array(5)].map((_, i) => (
-                            <Star 
-                              key={i} 
-                              size={16} 
-                              fill={i < 5 ? 'currentColor' : 'none'} 
-                            />
-                          ))}
-                        </div>
-                        <p className="text-gray-300">
-                          Best MMA gear I've ever used. The quality is exceptional and they've held up well through intense training sessions. Worth every penny!
-                        </p>
-                      </div>
-                      
-                      {/* More Reviews Button */}
                       <div className="text-center mt-8">
                         <button className="btn-secondary">
                           Load More Reviews
@@ -445,22 +630,22 @@ const ProductDetailPage: React.FC = () => {
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <div className="mt-16">
-            <h2 className="section-title mb-8">Related Products</h2>
+            <h2 className="text-3xl font-heading font-bold text-gray-100 mb-8">You May Also Like</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map(relatedProduct => (
                 <motion.div 
                   key={relatedProduct.id}
-                  className="product-card"
-                  variants={fadeIn}
-                  initial="initial"
-                  whileInView="animate"
+                  className="bg-secondary-light rounded-lg overflow-hidden"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
                   viewport={{ once: true }}
                 >
-                  <Link to={`/products/${relatedProduct.id}`} className="block product-hover-zoom overflow-hidden">
+                  <Link to={`/products/${relatedProduct.id}`} className="block overflow-hidden">
                     <img 
                       src={relatedProduct.image} 
                       alt={relatedProduct.name} 
-                      className="w-full aspect-square object-cover"
+                      className="w-full aspect-square object-cover hover:scale-105 transition-transform duration-300"
                     />
                   </Link>
                   
@@ -479,8 +664,14 @@ const ProductDetailPage: React.FC = () => {
                         )}
                       </div>
                       
-                      <button className="text-primary hover:text-primary-dark">
-                        <Heart size={20} />
+                      <button 
+                        className="text-gray-300 hover:text-accent transition-colors"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setIsFavorite(!isFavorite);
+                        }}
+                      >
+                        <Heart size={20} fill={isFavorite ? 'currentColor' : 'none'} />
                       </button>
                     </div>
                   </div>

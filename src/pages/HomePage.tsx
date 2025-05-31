@@ -7,6 +7,7 @@ import { Autoplay, Pagination, Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
+import ProductSection from '../components/ProductSection';
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -148,6 +149,9 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+
+      <ProductSection/>
 
       {/* Featured Product */}
       <section className="py-20 bg-secondary relative overflow-hidden">
