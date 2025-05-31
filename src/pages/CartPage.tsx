@@ -1,458 +1,572 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Trash2, ShoppingBag, ChevronLeft, CreditCard, ArrowRight } from 'lucide-react';
+"use client"
 
-// Animation variants
-const fadeIn = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.4 } }
-};
+import type React from "react"
+import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
+import { motion, AnimatePresence } from "framer-motion"
+import {
+  ShoppingCart,
+  Trash2,
+  Plus,
+  Minus,
+  ArrowLeft,
+  Gift,
+  Truck,
+  Shield,
+  CreditCard,
+  ChevronRight,
+  Heart,
+} from "lucide-react"
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
+// Import the Header component
+import Header from "../components/Header"
+
+// Types
+interface CartItem {
+  id: number
+  name: string
+  price: number
+  quantity: number
+  image: string
+  size?: string
+  color?: string
+}
+
+interface RecommendedProduct {
+  id: number
+  name: string
+  price: number
+  image: string
+  isNew?: boolean
+}
 
 const CartPage: React.FC = () => {
-  // Dummy cart data
-  const [cartItems, setCartItems] = useState([
-    { 
-      id: '1', 
-      name: 'Pro MMA Gloves',
-      image: 'https://images.pexels.com/photos/9389932/pexels-photo-9389932.jpeg',
-      price: 89.99, 
-      quantity: 1,
-      size: 'L',
-      color: 'Black/Gold'
-    },
-    { 
-      id: '2', 
-      name: 'Competition Fight Shorts',
-      image: 'https://images.pexels.com/photos/9389884/pexels-photo-9389884.jpeg',
-      price: 59.99, 
+  // State for cart items (would normally be shared with Header via context or state management)
+  const [cartItems, setCartItems] = useState<CartItem[]>([
+    {
+      id: 1,
+      name: "StrikeZone Tee",
+      price: 1499,
       quantity: 2,
-      size: 'M',
-      color: 'Black'
+      image:
+        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-05-28_16-57-30-740.jpg-7V2fXbcrm3YNuoEoMewvuDkF6n8bXT.jpeg",
+      size: "L",
+      color: "Black",
     },
-    { 
-      id: '3', 
-      name: 'Performance Rashguard',
-      image: 'https://images.pexels.com/photos/8032725/pexels-photo-8032725.jpeg',
-      price: 45.99, 
+    {
+      id: 2,
+      name: "Fight Hard Hoodie",
+      price: 2999,
       quantity: 1,
-      size: 'L',
-      color: 'Red/Black'
+      image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/T2a.jpg-rpKI56EC6ILseeUa7ppAvSHDWFH6Pc.jpeg",
+      size: "M",
+      color: "Black",
+    },
+    {
+      id: 3,
+      name: "Training Shorts",
+      price: 1299,
+      quantity: 1,
+      image:
+        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_24-08-15_11-16-12-417-3T3fYz6jkMMllMME0EgRtGmMsDdpzC.png",
+      size: "L",
+      color: "Black/Red",
+    },
+  ])
+
+  const [couponCode, setCouponCode] = useState("")
+  const [couponApplied, setCouponApplied] = useState(false)
+  const [discount, setDiscount] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
+  const [deliveryOption, setDeliveryOption] = useState("standard")
+
+  // Recommended products
+  const recommendedProducts: RecommendedProduct[] = [
+    {
+      id: 4,
+      name: "MMA Gloves",
+      price: 1999,
+      image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/goku-8mFhEuwTKzwoLBSeFqpMJWhKVotXhw.webp",
+      isNew: true,
+    },
+    {
+      id: 5,
+      name: "Insomnia Hoodie",
+      price: 2499,
+      image:
+        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/insomia_hoddie-ifOBUqrK8yIOh9R6CJkFwOkc8lCuAo.webp",
+    },
+    {
+      id: 6,
+      name: "Champion Series Tee",
+      price: 1699,
+      image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/falling-pnro5EB4y0YZc0KUgH4Y1TbkA76FH9.webp",
+    },
+    {
+      id: 7,
+      name: "Street Edge Tee",
+      price: 1499,
+      image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/insomia-4GljPIEfy0rlc2lMq0vMab2jVu2FKz.webp",
+      isNew: true,
+    },
+  ]
+
+  // Simulate loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // Functions to manage cart
+  const updateQuantity = (id: number, newQuantity: number) => {
+    if (newQuantity === 0) {
+      removeItem(id)
+      return
     }
-  ]);
-  
-  const [promoCode, setPromoCode] = useState('');
-  const [promoApplied, setPromoApplied] = useState(false);
-  const [promoDiscount, setPromoDiscount] = useState(0);
-  
-  // Calculate cart totals
-  const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-  const shipping = subtotal > 100 ? 0 : 12.99;
-  const discount = promoApplied ? promoDiscount : 0;
-  const total = subtotal + shipping - discount;
-  
-  const handleQuantityChange = (id: string, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    
-    setCartItems(cartItems.map(item => 
-      item.id === id ? { ...item, quantity: newQuantity } : item
-    ));
-  };
-  
-  const handleRemoveItem = (id: string) => {
-    setCartItems(cartItems.filter(item => item.id !== id));
-  };
-  
-  const handleApplyPromo = () => {
-    if (promoCode.toUpperCase() === 'FIGHTER10') {
-      setPromoApplied(true);
-      setPromoDiscount(subtotal * 0.1); // 10% discount
-    } else {
-      alert('Invalid promo code');
+    setCartItems((items) => items.map((item) => (item.id === id ? { ...item, quantity: newQuantity } : item)))
+  }
+
+  const removeItem = (id: number) => {
+    setCartItems((items) => items.filter((item) => item.id !== id))
+  }
+
+  const applyCoupon = () => {
+    if (couponCode.toUpperCase() === "DIWALI") {
+      setCouponApplied(true)
+      setDiscount(0.15) // 15% discount
+    } else if (couponCode.toUpperCase() === "INDIA75") {
+      setCouponApplied(true)
+      setDiscount(0.2) // 20% discount
     }
-  };
-  
+  }
+
+  const removeCoupon = () => {
+    setCouponApplied(false)
+    setDiscount(0)
+    setCouponCode("")
+  }
+
+  // Calculate totals
+  const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0)
+  const discountAmount = subtotal * discount
+  const shippingCost = deliveryOption === "express" ? 199 : subtotal > 1999 ? 0 : 99
+  const gstAmount = (subtotal - discountAmount) * 0.18
+  const total = subtotal - discountAmount + shippingCost + gstAmount
+
+  // Format price in Indian Rupees
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(price)
+  }
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+      },
+    },
+    exit: {
+      opacity: 0,
+      x: -100,
+      transition: {
+        ease: "easeInOut",
+      },
+    },
+  }
+
   return (
-    <div className="bg-secondary min-h-screen py-12">
-      <div className="container">
-        <h1 className="section-title mb-8">Your Cart</h1>
-        
-        {cartItems.length > 0 ? (
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Cart Items */}
-            <motion.div 
-              className="lg:w-2/3"
-              variants={staggerContainer}
-              initial="hidden"
-              animate="show"
-            >
-              <div className="bg-secondary-light rounded-lg overflow-hidden mb-6">
-                <div className="p-4 bg-secondary-dark border-b border-gray-700">
-                  <div className="grid grid-cols-12 gap-4">
-                    <div className="col-span-6">
-                      <h3 className="font-heading font-bold">Product</h3>
+    <div className="min-h-screen bg-secondary">
+      {/* Include the Header component */}
+      <Header />
+
+      {/* Page Content */}
+      <div className="container mx-auto px-4 py-8 mt-8">
+        {/* Breadcrumb */}
+        <div className="flex items-center text-sm text-gray-400 mb-6">
+          <Link to="/" className="hover:text-[#FF9933] transition-colors">
+            Home
+          </Link>
+          <ChevronRight size={14} className="mx-2" />
+          <span className="text-white">Shopping Cart</span>
+        </div>
+
+        {/* Page Title */}
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-heading font-bold text-white">Shopping Cart</h1>
+          <div className="mt-2 h-1 w-20 bg-gradient-to-r from-[#FF9933] via-[#FFFFFF] to-[#138808]"></div>
+        </div>
+
+        {isLoading ? (
+          // Loading skeleton
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-secondary-light/50 rounded-lg p-6 animate-pulse">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-20 h-20 bg-gray-700 rounded-md"></div>
+                    <div className="flex-1">
+                      <div className="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-gray-700 rounded w-1/4 mb-4"></div>
+                      <div className="h-8 bg-gray-700 rounded w-24"></div>
                     </div>
-                    <div className="col-span-2 text-center">
-                      <h3 className="font-heading font-bold">Price</h3>
-                    </div>
-                    <div className="col-span-2 text-center">
-                      <h3 className="font-heading font-bold">Quantity</h3>
-                    </div>
-                    <div className="col-span-2 text-right">
-                      <h3 className="font-heading font-bold">Total</h3>
-                    </div>
+                    <div className="h-8 bg-gray-700 rounded w-20"></div>
                   </div>
                 </div>
-                
-                {cartItems.map(item => (
-                  <motion.div 
-                    key={item.id}
-                    variants={fadeIn}
-                    className="p-4 border-b border-gray-700 last:border-b-0"
-                  >
-                    <div className="grid grid-cols-12 gap-4 items-center">
-                      {/* Product Info */}
-                      <div className="col-span-6">
-                        <div className="flex items-center">
-                          <div className="w-20 h-20 flex-shrink-0 bg-secondary rounded overflow-hidden mr-4">
-                            <img 
-                              src={item.image} 
-                              alt={item.name} 
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div>
-                            <h4 className="font-heading font-bold text-gray-100 mb-1">{item.name}</h4>
-                            <p className="text-sm text-gray-400">Size: {item.size}</p>
-                            <p className="text-sm text-gray-400">Color: {item.color}</p>
-                            <button 
-                              className="text-red-500 text-sm flex items-center mt-2 hover:text-red-400 transition-colors"
-                              onClick={() => handleRemoveItem(item.id)}
-                            >
-                              <Trash2 size={14} className="mr-1" />
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Price */}
-                      <div className="col-span-2 text-center">
-                        <span className="text-primary font-medium">${item.price.toFixed(2)}</span>
-                      </div>
-                      
-                      {/* Quantity */}
-                      <div className="col-span-2 flex justify-center">
-                        <div className="flex items-center">
-                          <button 
-                            className="w-8 h-8 flex items-center justify-center bg-secondary rounded-l border border-gray-700"
-                            onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                          >
-                            -
-                          </button>
-                          <input 
-                            type="number"
-                            value={item.quantity}
-                            onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 1)}
-                            className="w-10 h-8 bg-secondary border-t border-b border-gray-700 text-center focus:outline-none"
-                          />
-                          <button 
-                            className="w-8 h-8 flex items-center justify-center bg-secondary rounded-r border border-gray-700"
-                            onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-                      
-                      {/* Total */}
-                      <div className="col-span-2 text-right">
-                        <span className="font-bold text-gray-100">${(item.price * item.quantity).toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-              
-              <div className="flex flex-col sm:flex-row justify-between items-center">
-                <Link to="/products" className="flex items-center text-primary hover:text-primary-dark transition-colors mb-4 sm:mb-0">
-                  <ChevronLeft size={20} className="mr-1" />
-                  Continue Shopping
-                </Link>
-                
-                <div className="flex items-center space-x-2">
-                  <input 
-                    type="text"
-                    placeholder="Promo code"
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                    className="px-4 py-2 bg-secondary-light border border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <button 
-                    className="btn-primary h-full py-2"
-                    onClick={handleApplyPromo}
-                    disabled={promoApplied}
-                  >
-                    Apply
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-            
-            {/* Order Summary */}
-            <motion.div 
-              className="lg:w-1/3"
-              variants={fadeIn}
-              initial="initial"
-              animate="animate"
-            >
-              <div className="bg-secondary-light rounded-lg overflow-hidden">
-                <div className="p-4 bg-secondary-dark border-b border-gray-700">
-                  <h3 className="font-heading font-bold text-xl">Order Summary</h3>
-                </div>
-                
-                <div className="p-6">
-                  <div className="space-y-4 mb-6">
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Subtotal</span>
-                      <span className="font-medium">${subtotal.toFixed(2)}</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Shipping</span>
-                      <span className="font-medium">
-                        {shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}
-                      </span>
-                    </div>
-                    
-                    {promoApplied && (
-                      <div className="flex justify-between text-accent">
-                        <span>Discount (10%)</span>
-                        <span>-${discount.toFixed(2)}</span>
-                      </div>
-                    )}
-                    
-                    <div className="pt-4 border-t border-gray-700">
-                      <div className="flex justify-between">
-                        <span className="font-heading font-bold text-lg">Total</span>
-                        <span className="font-heading font-bold text-lg text-primary">${total.toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <button className="w-full btn-primary mb-4">
-                    <CreditCard size={20} className="mr-2" />
-                    Proceed to Checkout
-                  </button>
-                  
-                  <p className="text-center text-sm text-gray-400 mb-4">
-                    We accept Credit Cards, PayPal, and Apple Pay
-                  </p>
-                  
-                  <div className="flex justify-center space-x-2">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/MasterCard_Logo.svg/200px-MasterCard_Logo.svg.png" alt="Mastercard" className="h-8" />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/200px-Visa_Inc._logo.svg.png" alt="Visa" className="h-8" />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/124px-PayPal.svg.png" alt="PayPal" className="h-8" />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Apple_Pay_logo.svg/100px-Apple_Pay_logo.svg.png" alt="Apple Pay" className="h-8" />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Shipping Policy */}
-              <div className="mt-6 bg-secondary-light rounded-lg p-6">
-                <h3 className="font-heading font-bold mb-3">Shipping Information</h3>
-                <ul className="space-y-2 text-gray-300">
-                  <li className="flex items-start">
-                    <span className="text-primary mr-2">•</span>
-                    Free shipping on orders over $100
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-primary mr-2">•</span>
-                    Standard shipping (3-5 business days)
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-primary mr-2">•</span>
-                    Express shipping available at checkout
-                  </li>
-                </ul>
-              </div>
-            </motion.div>
-          </div>
-        ) : (
-          <motion.div 
-            className="text-center py-16"
-            variants={fadeIn}
-            initial="initial"
-            animate="animate"
-          >
-            <div className="inline-block p-6 bg-secondary-light rounded-full mb-6">
-              <ShoppingBag size={64} className="text-primary" />
+              ))}
             </div>
-            <h2 className="text-3xl font-heading font-bold mb-4">Your cart is empty</h2>
-            <p className="text-gray-300 mb-8 max-w-md mx-auto">
-              Looks like you haven't added any items to your cart yet. Check out our products and find the perfect gear for your next fight.
+            <div className="bg-secondary-light/50 rounded-lg h-96 animate-pulse"></div>
+          </div>
+        ) : cartItems.length === 0 ? (
+          // Empty cart
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16 px-4">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-[#FF9933]/10 rounded-full mb-6">
+              <ShoppingCart size={32} className="text-[#FF9933]" />
+            </div>
+            <h2 className="text-2xl font-heading font-bold text-white mb-4">Your cart is empty</h2>
+            <p className="text-gray-400 mb-8 max-w-md mx-auto">
+              Looks like you haven't added any products to your cart yet. Explore our collections to find something
+              you'll love.
             </p>
-            <Link to="/products" className="btn-primary">
-              Explore Products
+            <Link
+              to="/products"
+              className="inline-flex items-center px-6 py-3 bg-[#FF9933] text-secondary-dark font-bold rounded-md hover:bg-[#FF9933]/90 transition-all duration-300 hover:scale-105"
+            >
+              <ArrowLeft size={18} className="mr-2" />
+              Continue Shopping
             </Link>
           </motion.div>
-        )}
-        
-        {/* You May Also Like */}
-        <div className="mt-20">
-          <h2 className="section-title mb-8">You May Also Like</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Recommended Product 1 */}
-            <motion.div 
-              className="product-card"
-              variants={fadeIn}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
+        ) : (
+          // Cart with items
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Cart Items */}
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="lg:col-span-2 space-y-6"
             >
-              <Link to="/products/headgear" className="block product-hover-zoom overflow-hidden">
-                <img 
-                  src="https://images.pexels.com/photos/6740732/pexels-photo-6740732.jpeg" 
-                  alt="MMA Headgear" 
-                  className="w-full aspect-square object-cover"
-                />
-              </Link>
-              <div className="p-4">
-                <Link to="/products/headgear" className="block">
-                  <h3 className="font-heading text-lg font-bold text-gray-100 hover:text-primary transition-colors">
-                    Professional Headgear
-                  </h3>
-                </Link>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="font-bold text-primary">$79.99</span>
-                  <button className="text-primary hover:text-primary-dark">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </button>
+              <div className="bg-secondary-light/30 backdrop-blur-sm rounded-lg overflow-hidden">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-heading font-bold text-white">Cart Items ({cartItems.length})</h2>
+                    <button className="text-sm text-[#FF9933] hover:underline">Clear All</button>
+                  </div>
+
+                  <AnimatePresence>
+                    {cartItems.map((item) => (
+                      <motion.div
+                        key={item.id}
+                        variants={itemVariants}
+                        exit="exit"
+                        className="flex flex-col sm:flex-row items-start sm:items-center py-6 border-t border-gray-800 group"
+                      >
+                        {/* Product Image */}
+                        <div className="w-full sm:w-20 h-40 sm:h-20 mb-4 sm:mb-0 overflow-hidden rounded-md">
+                          <img
+                            src={item.image || "/placeholder.svg"}
+                            alt={item.name}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          />
+                        </div>
+
+                        {/* Product Info */}
+                        <div className="flex-1 px-0 sm:px-4">
+                          <h3 className="font-bold text-white text-lg mb-1 group-hover:text-[#FF9933] transition-colors">
+                            {item.name}
+                          </h3>
+                          <div className="flex items-center text-sm text-gray-400 mb-3">
+                            {item.size && <span className="mr-3">Size: {item.size}</span>}
+                            {item.color && <span>Color: {item.color}</span>}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-4">
+                            {/* Quantity Selector */}
+                            <div className="flex items-center border border-gray-700 rounded-md overflow-hidden">
+                              <button
+                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                className="w-8 h-8 flex items-center justify-center bg-secondary-light hover:bg-[#FF9933]/20 text-white transition-colors"
+                              >
+                                <Minus size={14} />
+                              </button>
+                              <span className="w-10 text-center text-white">{item.quantity}</span>
+                              <button
+                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                className="w-8 h-8 flex items-center justify-center bg-secondary-light hover:bg-[#FF9933]/20 text-white transition-colors"
+                              >
+                                <Plus size={14} />
+                              </button>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex items-center space-x-3">
+                              <button className="text-gray-400 hover:text-[#FF9933] transition-colors">
+                                <Heart size={18} />
+                              </button>
+                              <button
+                                onClick={() => removeItem(item.id)}
+                                className="text-gray-400 hover:text-red-500 transition-colors"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Price */}
+                        <div className="mt-4 sm:mt-0 w-full sm:w-auto text-right">
+                          <p className="text-[#FF9933] font-bold text-lg">{formatPrice(item.price)}</p>
+                          <p className="text-sm text-gray-400">
+                            {item.quantity > 1 && `${formatPrice(item.price)} each`}
+                          </p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                 </div>
               </div>
-            </motion.div>
-            
-            {/* Recommended Product 2 */}
-            <motion.div 
-              className="product-card"
-              variants={fadeIn}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-            >
-              <Link to="/products/handwraps" className="block product-hover-zoom overflow-hidden">
-                <img 
-                  src="https://images.pexels.com/photos/4761671/pexels-photo-4761671.jpeg" 
-                  alt="Hand Wraps" 
-                  className="w-full aspect-square object-cover"
-                />
-              </Link>
-              <div className="p-4">
-                <Link to="/products/handwraps" className="block">
-                  <h3 className="font-heading text-lg font-bold text-gray-100 hover:text-primary transition-colors">
-                    Professional Hand Wraps (3 Pack)
-                  </h3>
-                </Link>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="font-bold text-primary">$24.99</span>
-                  <button className="text-primary hover:text-primary-dark">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </button>
+
+              {/* Delivery Options */}
+              <motion.div variants={itemVariants} className="bg-secondary-light/30 backdrop-blur-sm rounded-lg p-6">
+                <h2 className="text-xl font-heading font-bold text-white mb-4">Delivery Options</h2>
+                <div className="space-y-3">
+                  <label className="flex items-center justify-between p-4 border border-gray-800 rounded-md cursor-pointer hover:border-[#FF9933]/50 transition-colors">
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        name="delivery"
+                        value="standard"
+                        checked={deliveryOption === "standard"}
+                        onChange={() => setDeliveryOption("standard")}
+                        className="mr-3 accent-[#FF9933]"
+                      />
+                      <div>
+                        <p className="font-medium text-white">Standard Delivery</p>
+                        <p className="text-sm text-gray-400">3-5 business days</p>
+                      </div>
+                    </div>
+                    <span className="text-white font-medium">{subtotal > 1999 ? "Free" : formatPrice(99)}</span>
+                  </label>
+
+                  <label className="flex items-center justify-between p-4 border border-gray-800 rounded-md cursor-pointer hover:border-[#FF9933]/50 transition-colors">
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        name="delivery"
+                        value="express"
+                        checked={deliveryOption === "express"}
+                        onChange={() => setDeliveryOption("express")}
+                        className="mr-3 accent-[#FF9933]"
+                      />
+                      <div>
+                        <p className="font-medium text-white">Express Delivery</p>
+                        <p className="text-sm text-gray-400">1-2 business days</p>
+                      </div>
+                    </div>
+                    <span className="text-white font-medium">{formatPrice(199)}</span>
+                  </label>
                 </div>
-              </div>
-            </motion.div>
-            
-            {/* Recommended Product 3 */}
-            <motion.div 
-              className="product-card"
-              variants={fadeIn}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-            >
-              <Link to="/products/mouthguard" className="block product-hover-zoom overflow-hidden">
-                <img 
-                  src="https://images.pexels.com/photos/6111/fitness-equipment-boxing-glove-hitting.jpg" 
-                  alt="Mouthguard" 
-                  className="w-full aspect-square object-cover"
-                />
-              </Link>
-              <div className="p-4">
-                <Link to="/products/mouthguard" className="block">
-                  <h3 className="font-heading text-lg font-bold text-gray-100 hover:text-primary transition-colors">
-                    Premium Mouthguard
-                  </h3>
-                </Link>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="font-bold text-primary">$19.99</span>
-                  <button className="text-primary hover:text-primary-dark">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </button>
+              </motion.div>
+
+              {/* Recommended Products */}
+              <motion.div variants={itemVariants} className="bg-secondary-light/30 backdrop-blur-sm rounded-lg p-6">
+                <h2 className="text-xl font-heading font-bold text-white mb-6">You May Also Like</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {recommendedProducts.map((product) => (
+                    <Link
+                      key={product.id}
+                      to={`/products/${product.id}`}
+                      className="group block rounded-md overflow-hidden transition-transform hover:scale-105"
+                    >
+                      <div className="relative aspect-square overflow-hidden bg-secondary-light">
+                        <img
+                          src={product.image || "/placeholder.svg"}
+                          alt={product.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        {product.isNew && (
+                          <span className="absolute top-2 right-2 bg-[#FF9933] text-secondary-dark text-xs font-bold px-2 py-1 rounded">
+                            NEW
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-2">
+                        <h3 className="text-sm font-medium text-white truncate group-hover:text-[#FF9933] transition-colors">
+                          {product.name}
+                        </h3>
+                        <p className="text-[#FF9933] font-bold text-sm">{formatPrice(product.price)}</p>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
-            
-            {/* Recommended Product 4 */}
-            <motion.div 
-              className="product-card"
-              variants={fadeIn}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
+
+            {/* Order Summary */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
+              className="lg:sticky lg:top-24 h-fit"
             >
-              <Link to="/products/gym-bag" className="block product-hover-zoom overflow-hidden">
-                <img 
-                  src="https://images.pexels.com/photos/7992496/pexels-photo-7992496.jpeg" 
-                  alt="Gym Bag" 
-                  className="w-full aspect-square object-cover"
-                />
-              </Link>
-              <div className="p-4">
-                <Link to="/products/gym-bag" className="block">
-                  <h3 className="font-heading text-lg font-bold text-gray-100 hover:text-primary transition-colors">
-                    Fighter Gym Bag
-                  </h3>
+              <div className="bg-secondary-light/30 backdrop-blur-sm rounded-lg p-6">
+                <h2 className="text-xl font-heading font-bold text-white mb-6">Order Summary</h2>
+
+                {/* Price Breakdown */}
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Subtotal ({cartItems.length} items)</span>
+                    <span className="text-white">{formatPrice(subtotal)}</span>
+                  </div>
+
+                  {couponApplied && (
+                    <div className="flex justify-between text-green-400">
+                      <span className="flex items-center">
+                        Discount
+                        <button onClick={removeCoupon} className="ml-2 text-xs text-gray-400 hover:text-[#FF9933]">
+                          Remove
+                        </button>
+                      </span>
+                      <span>-{formatPrice(discountAmount)}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Shipping</span>
+                    <span className="text-white">
+                      {deliveryOption === "express" ? formatPrice(199) : subtotal > 1999 ? "Free" : formatPrice(99)}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">GST (18%)</span>
+                    <span className="text-white">{formatPrice(gstAmount)}</span>
+                  </div>
+
+                  <div className="border-t border-gray-800 pt-3 mt-3">
+                    <div className="flex justify-between font-bold">
+                      <span className="text-white">Total</span>
+                      <span className="text-[#FF9933] text-xl">{formatPrice(total)}</span>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">(Including {formatPrice(gstAmount)} in taxes)</p>
+                  </div>
+                </div>
+
+                {/* Coupon Code */}
+                {!couponApplied && (
+                  <div className="mt-6">
+                    <p className="text-sm text-gray-300 mb-2">Have a coupon code?</p>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value)}
+                        placeholder="Enter coupon code"
+                        className="flex-1 bg-secondary border border-gray-700 rounded-md px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-[#FF9933]"
+                      />
+                      <button
+                        onClick={applyCoupon}
+                        className="px-4 py-2 bg-gray-700 text-white font-bold rounded-md hover:bg-gray-600 transition-colors"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-400">Try "DIWALI" for 15% off or "INDIA75" for 20% off</div>
+                  </div>
+                )}
+
+                {/* Checkout Button */}
+                <button className="w-full mt-6 bg-[#FF9933] hover:bg-[#FF9933]/90 text-secondary-dark font-bold py-3 rounded-md transition-all duration-300 hover:scale-105 active:scale-95">
+                  PROCEED TO CHECKOUT
+                </button>
+
+                {/* Continue Shopping */}
+                <Link
+                  to="/products"
+                  className="flex items-center justify-center w-full mt-4 py-2 text-gray-300 hover:text-[#FF9933] transition-colors"
+                >
+                  <ArrowLeft size={16} className="mr-2" />
+                  Continue Shopping
                 </Link>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="font-bold text-primary">$69.99</span>
-                  <button className="text-primary hover:text-primary-dark">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </button>
+
+                {/* Trust Badges */}
+                <div className="mt-8 pt-6 border-t border-gray-800">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-[#FF9933]/10 flex items-center justify-center mr-3">
+                        <Shield size={16} className="text-[#FF9933]" />
+                      </div>
+                      <span className="text-xs text-gray-300">Secure Checkout</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-[#FF9933]/10 flex items-center justify-center mr-3">
+                        <Truck size={16} className="text-[#FF9933]" />
+                      </div>
+                      <span className="text-xs text-gray-300">Fast Delivery</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-[#FF9933]/10 flex items-center justify-center mr-3">
+                        <Gift size={16} className="text-[#FF9933]" />
+                      </div>
+                      <span className="text-xs text-gray-300">Easy Returns</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-[#FF9933]/10 flex items-center justify-center mr-3">
+                        <CreditCard size={16} className="text-[#FF9933]" />
+                      </div>
+                      <span className="text-xs text-gray-300">Secure Payment</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Methods */}
+                <div className="mt-6 flex justify-center space-x-3">
+                  <img
+                    src="https://cdn-icons-png.flaticon.com/128/196/196566.png"
+                    alt="Visa"
+                    className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity"
+                  />
+                  <img
+                    src="https://cdn-icons-png.flaticon.com/128/196/196561.png"
+                    alt="Mastercard"
+                    className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity"
+                  />
+                  <img
+                    src="https://cdn-icons-png.flaticon.com/128/196/196565.png"
+                    alt="PayPal"
+                    className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity"
+                  />
+                  <img
+                    src="https://cdn-icons-png.flaticon.com/128/349/349221.png"
+                    alt="UPI"
+                    className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity"
+                  />
                 </div>
               </div>
             </motion.div>
           </div>
-          
-          <div className="text-center mt-8">
-            <Link to="/products" className="inline-flex items-center text-primary hover:text-primary-dark font-heading">
-              Browse All Products <ArrowRight size={16} className="ml-2" />
-            </Link>
-          </div>
-        </div>
+        )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default CartPage;
+export default CartPage

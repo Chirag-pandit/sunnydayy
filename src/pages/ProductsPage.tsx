@@ -92,11 +92,10 @@ const ProductsPage: React.FC = () => {
 
   const categories = [
     { id: 'all', name: 'All Products' },
-    { id: 'gloves', name: 'MMA Gloves' },
+    { id: 'tshirts', name: 'T-Shirts' },
     { id: 'shorts', name: 'Fight Shorts' },
-    { id: 'rashguards', name: 'Rashguards' },
-    { id: 'protection', name: 'Protection' },
-    { id: 'accessories', name: 'Accessories' }
+    { id: 'hoodies', name: 'Hoodies' },
+   { id: 'gloves', name: 'MMA Gloves' },
   ];
 
   return (

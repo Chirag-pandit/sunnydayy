@@ -98,3 +98,14 @@
 .product-hover-zoom:hover img {
   transform: scale(1.05);
 }
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

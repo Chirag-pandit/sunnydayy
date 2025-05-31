@@ -1,0 +1,16 @@
+.testimonial-slider .swiper-slide {
+  width: 350px;
+}
+.testimonial-slider .swiper-pagination-bullet {
+  background: #ff9933;
+}
+.testimonial-slider .swiper-pagination-bullet-active {
+  background: #ff9933;
+}
+
+.testimonials-swiper .swiper-pagination-bullet {
+  background: #3b82f6;
+}
+.testimonials-swiper .swiper-pagination-bullet-active {
+  background: #1d4ed8;
+}

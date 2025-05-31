@@ -80,17 +80,17 @@ const HomePage: React.FC = () => {
             >
               <div className="h-96 overflow-hidden">
                 <img 
-                  src="https://images.pexels.com/photos/6765836/pexels-photo-6765836.jpeg" 
-                  alt="MMA Gloves" 
+                  src="public\images\products\tshirts\Picsart_25-05-01_10-00-19-353.jpg" 
+                  alt="MMA T-Shirt" 
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-secondary-dark to-transparent opacity-80"></div>
               <div className="absolute bottom-0 left-0 p-6">
-                <h3 className="text-2xl font-heading font-bold text-primary mb-2">MMA GLOVES</h3>
+                <h3 className="text-2xl font-heading font-bold text-primary mb-2">MMA T-Shirt</h3>
                 <p className="text-gray-100 mb-4">Precision-engineered for perfect strikes.</p>
                 <Link to="/products?category=gloves" className="inline-flex items-center text-primary font-heading hover:text-primary-light transition-colors">
-                  SHOP GLOVES <ArrowRight size={16} className="ml-2" />
+                  SHOP T-Shirt <ArrowRight size={16} className="ml-2" />
                 </Link>
               </div>
             </motion.div>
@@ -106,14 +106,14 @@ const HomePage: React.FC = () => {
             >
               <div className="h-96 overflow-hidden">
                 <img 
-                  src="https://images.pexels.com/photos/9389884/pexels-photo-9389884.jpeg" 
-                  alt="Fight Shorts" 
+                  src="public\images\products\tshirts\Picsart_25-05-31_14-52-53-537.jpg" 
+                  alt="FIGHTERS SHORTS" 
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-secondary-dark to-transparent opacity-80"></div>
               <div className="absolute bottom-0 left-0 p-6">
-                <h3 className="text-2xl font-heading font-bold text-primary mb-2">FIGHT SHORTS</h3>
+                <h3 className="text-2xl font-heading font-bold text-primary mb-2">MMA SHORTS</h3>
                 <p className="text-gray-100 mb-4">Ultimate flexibility for your toughest moves.</p>
                 <Link to="/products?category=shorts" className="inline-flex items-center text-primary font-heading hover:text-primary-light transition-colors">
                   SHOP SHORTS <ArrowRight size={16} className="ml-2" />
@@ -132,17 +132,17 @@ const HomePage: React.FC = () => {
             >
               <div className="h-96 overflow-hidden">
                 <img 
-                  src="https://images.pexels.com/photos/10723057/pexels-photo-10723057.jpeg" 
-                  alt="Rashguards" 
+                  src="public\images\products\tshirts\insomia_hoddie.webp" 
+                  alt="MMA HOODIES" 
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-secondary-dark to-transparent opacity-80"></div>
               <div className="absolute bottom-0 left-0 p-6">
-                <h3 className="text-2xl font-heading font-bold text-primary mb-2">RASHGUARDS</h3>
+                <h3 className="text-2xl font-heading font-bold text-primary mb-2">MMA HOODIE</h3>
                 <p className="text-gray-100 mb-4">Superior protection during intense training.</p>
                 <Link to="/products?category=rashguards" className="inline-flex items-center text-primary font-heading hover:text-primary-light transition-colors">
-                  SHOP RASHGUARDS <ArrowRight size={16} className="ml-2" />
+                  SHOP HOODIE <ArrowRight size={16} className="ml-2" />
                 </Link>
               </div>
             </motion.div>
@@ -196,7 +196,7 @@ const HomePage: React.FC = () => {
                 <div className="absolute -inset-0.5 bg-primary rounded-full blur-md opacity-70 animate-pulse-slow"></div>
                 <div className="relative bg-secondary-dark rounded-full p-8">
                   <img 
-                    src="https://images.pexels.com/photos/9441806/pexels-photo-9441806.jpeg" 
+                    src="public\images\products\tshirts\Gloves.jpg" 
                     alt="Championship MMA Gloves" 
                     className="rounded-full w-full"
                   />

@@ -9,7 +9,7 @@ const AnnouncementBar: React.FC = () => {
   return (
     <div className="bg-primary text-secondary px-4 py-2 text-center relative">
       <p className="font-heading font-semibold">
-        FREE SHIPPING ON ORDERS OVER $100
+        FREE SHIPPING ON ORDERS OVER ₹500
       </p>
       <button 
         onClick={() => setIsVisible(false)}
