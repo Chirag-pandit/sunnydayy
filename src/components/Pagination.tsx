@@ -1,109 +1,92 @@
-import React from 'react';
-import { PaginationProps } from '../types';
+"use client"
 
-const Pagination: React.FC<PaginationProps> = ({ 
-  currentPage, 
-  totalPages, 
-  onPageChange 
-}) => {
-  // Generate page numbers array
+import type React from "react"
+
+interface PaginationProps {
+  currentPage: number
+  totalPages: number
+  onPageChange: (page: number) => void
+}
+
+const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => {
+  const MAX_VISIBLE_PAGES = 5
+  const ELLIPSIS = "..."
+
   const getPageNumbers = () => {
-    const pageNumbers = [];
-    const maxPagesToShow = 5;
-    
-    if (totalPages <= maxPagesToShow) {
-      // Show all pages if total is less than max to show
-      for (let i = 1; i <= totalPages; i++) {
-        pageNumbers.push(i);
-      }
-    } else {
-      // Show limited pages with ellipsis
-      if (currentPage <= 3) {
-        // Near start
-        for (let i = 1; i <= 4; i++) {
-          pageNumbers.push(i);
-        }
-        pageNumbers.push('ellipsis');
-        pageNumbers.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        // Near end
-        pageNumbers.push(1);
-        pageNumbers.push('ellipsis');
-        for (let i = totalPages - 3; i <= totalPages; i++) {
-          pageNumbers.push(i);
-        }
-      } else {
-        // Middle
-        pageNumbers.push(1);
-        pageNumbers.push('ellipsis');
-        pageNumbers.push(currentPage - 1);
-        pageNumbers.push(currentPage);
-        pageNumbers.push(currentPage + 1);
-        pageNumbers.push('ellipsis');
-        pageNumbers.push(totalPages);
-      }
+    if (totalPages <= MAX_VISIBLE_PAGES) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1)
     }
-    
-    return pageNumbers;
-  };
 
-  const pageNumbers = getPageNumbers();
-  
+    if (currentPage <= 3) {
+      return [1, 2, 3, 4, ELLIPSIS, totalPages]
+    }
+
+    if (currentPage >= totalPages - 2) {
+      return [1, ELLIPSIS, totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
+    }
+
+    return [1, ELLIPSIS, currentPage - 1, currentPage, currentPage + 1, ELLIPSIS, totalPages]
+  }
+
+  const pageNumbers = getPageNumbers()
+
   return (
-    <div className="flex justify-center mt-12">
-      <div className="flex items-center">
-        <button 
+    <div className="flex justify-center mt-8">
+      <nav className="flex items-center gap-1">
+        <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className={`px-4 py-2 mx-1 rounded ${
-            currentPage === 1 
-              ? 'bg-secondary-dark text-gray-500 cursor-not-allowed' 
-              : 'bg-secondary-light text-gray-300 hover:bg-primary hover:text-secondary-dark'
+          className={`p-2 rounded-md ${
+            currentPage === 1 ? "text-gray-500 cursor-not-allowed" : "text-white hover:bg-gray-700"
           }`}
           aria-label="Previous page"
         >
-          &laquo;
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              fillRule="evenodd"
+              d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+              clipRule="evenodd"
+            />
+          </svg>
         </button>
-        
-        {pageNumbers.map((page, index) => {
-          if (page === 'ellipsis') {
-            return (
-              <span key={`ellipsis-${index}`} className="px-4 py-2 mx-1 text-gray-300">
-                &hellip;
-              </span>
-            );
-          }
-          
-          return (
-            <button
-              key={`page-${page}`}
-              onClick={() => onPageChange(Number(page))}
-              className={`px-4 py-2 mx-1 rounded ${
-                currentPage === page 
-                  ? 'bg-primary text-secondary-dark' 
-                  : 'bg-secondary-light text-gray-300 hover:bg-primary hover:text-secondary-dark'
-              }`}
-            >
-              {page}
-            </button>
-          );
-        })}
-        
-        <button 
+
+        {pageNumbers.map((page, index) => (
+          <div key={index}>
+            {page === ELLIPSIS ? (
+              <span className="px-3 py-1 text-gray-500">{ELLIPSIS}</span>
+            ) : (
+              <button
+                onClick={() => onPageChange(page as number)}
+                className={`px-3 py-1 rounded-md min-w-[40px] ${
+                  currentPage === page ? "bg-red-600 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                }`}
+                aria-current={currentPage === page ? "page" : undefined}
+              >
+                {page}
+              </button>
+            )}
+          </div>
+        ))}
+
+        <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className={`px-4 py-2 mx-1 rounded ${
-            currentPage === totalPages 
-              ? 'bg-secondary-dark text-gray-500 cursor-not-allowed' 
-              : 'bg-secondary-light text-gray-300 hover:bg-primary hover:text-secondary-dark'
+          className={`p-2 rounded-md ${
+            currentPage === totalPages ? "text-gray-500 cursor-not-allowed" : "text-white hover:bg-gray-700"
           }`}
           aria-label="Next page"
         >
-          &raquo;
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              fillRule="evenodd"
+              d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+              clipRule="evenodd"
+            />
+          </svg>
         </button>
-      </div>
+      </nav>
     </div>
-  );
-};
+  )
+}
 
-export default Pagination;
+export default Pagination

@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Filter, ChevronDown, Grid3X3, List } from 'lucide-react';
-import { products } from '../data/products';
+import { Filter, ChevronDown, Grid3X3, List, ChevronLeft } from 'lucide-react';
+import { allProducts } from '../data/products';
+import { Product } from '../types';
+import Pagination from '../components/Pagination';
+import ProductCard from '../components/ProductCard';
 
 // Animation variants
 const staggerContainer = {
@@ -26,54 +29,160 @@ const fadeInUp = {
   }
 };
 
+type ViewType = 'grid' | 'list';
+
+interface Category {
+  id: string;
+  name: string;
+}
+
+interface PriceFilters {
+  under50: boolean;
+  between50And100: boolean;
+  between100And150: boolean;
+  over150: boolean;
+}
+
 const ProductsPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const categoryParam = searchParams.get('category');
-  
-  const [filteredProducts, setFilteredProducts] = useState(products);
+  const pageParam = searchParams.get('page');
+
+  const [products, setProducts] = useState<Product[]>(allProducts);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [displayProducts, setDisplayProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>(categoryParam || 'all');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [view, setView] = useState<ViewType>('grid');
   const [sortBy, setSortBy] = useState<string>('featured');
+  const [currentPage, setCurrentPage] = useState(pageParam ? parseInt(pageParam) : 1);
+  const [priceFilters, setPriceFilters] = useState<PriceFilters>({
+    under50: false,
+    between50And100: false,
+    between100And150: false,
+    over150: false
+  });
+  const [inStockOnly, setInStockOnly] = useState(false);
+  
+  const PRODUCTS_PER_PAGE = 6;
 
-  useEffect(() => {
-    // Filter products based on category
-    if (categoryParam && categoryParam !== 'all') {
-      setActiveCategory(categoryParam);
-      setFilteredProducts(products.filter(product => product.category === categoryParam));
-    } else {
-      setActiveCategory('all');
-      setFilteredProducts(products);
+  // Categories list with proper order (shirts, hoodies, shorts first)
+  const categories: Category[] = [
+    { id: 'all', name: 'All Products' },
+     { id: 'shirts', name: 'T-Shirts' },
+     { id: 'shorts', name: 'Fight Shorts' },
+     { id: 'hoodies', name: 'Hoodies' },
+   
+  ];
+
+  // Filter products based on all criteria
+  const filterProducts = useCallback(() => {
+    let result = [...products];
+    
+    // Filter by category
+    if (activeCategory && activeCategory !== 'all') {
+      result = result.filter(product => product.category === activeCategory);
     }
-  }, [categoryParam]);
+    
+    // Filter by in-stock status
+    if (inStockOnly) {
+      result = result.filter(product => product.stock > 0);
+    }
+    
+    // Filter by price
+    const activePriceFilters = Object.entries(priceFilters)
+      .filter(([_, value]) => value)
+      .map(([key]) => key);
 
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setSortBy(value);
+    if (activePriceFilters.length > 0) {
+      result = result.filter(product => {
+        if (priceFilters.under50 && product.price < 50) return true;
+        if (priceFilters.between50And100 && product.price >= 50 && product.price <= 100) return true;
+        if (priceFilters.between100And150 && product.price > 100 && product.price <= 150) return true;
+        if (priceFilters.over150 && product.price > 150) return true;
+        return false;
+      });
+    }
     
-    // Create a new array to avoid mutating the original
-    let sortedProducts = [...filteredProducts];
-    
-    switch(value) {
+    // Sort products
+    switch(sortBy) {
       case 'price-low':
-        sortedProducts.sort((a, b) => a.price - b.price);
-        break;
+        return [...result].sort((a, b) => a.price - b.price);
       case 'price-high':
-        sortedProducts.sort((a, b) => b.price - a.price);
-        break;
+        return [...result].sort((a, b) => b.price - a.price);
       case 'newest':
-        sortedProducts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        break;
+        // Assuming all products have a createdAt date
+        // return [...result].sort((a, b) => {
+        //   const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        //   const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        //   return dateB - dateA;
+        // });
       case 'featured':
       default:
-        // Reset to original filtered products
-        sortedProducts = categoryParam && categoryParam !== 'all' 
-          ? products.filter(product => product.category === categoryParam)
-          : [...products];
-        break;
+        return result;
+    }
+  }, [
+    products, 
+    activeCategory, 
+    sortBy, 
+    priceFilters, 
+    inStockOnly
+  ]);
+
+  // Handle pagination
+  const paginateProducts = useCallback((products: Product[], page: number) => {
+    const startIndex = (page - 1) * PRODUCTS_PER_PAGE;
+    return products.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
+  }, [PRODUCTS_PER_PAGE]);
+
+  // Apply filters and sort whenever criteria change
+  useEffect(() => {
+    const filtered = filterProducts();
+    setFilteredProducts(filtered);
+    
+    // Update displayed products based on current page
+    setDisplayProducts(paginateProducts(filtered, currentPage));
+    
+    // Update URL params
+    const params = new URLSearchParams();
+    if (activeCategory !== 'all') {
+      params.set('category', activeCategory);
+    }
+    if (currentPage > 1) {
+      params.set('page', currentPage.toString());
+    }
+    setSearchParams(params);
+  }, [
+    activeCategory, 
+    sortBy, 
+    currentPage, 
+    priceFilters, 
+    inStockOnly, 
+    filterProducts, 
+    paginateProducts, 
+    setSearchParams
+  ]);
+
+  // Update category and page from URL parameters
+  useEffect(() => {
+    if (categoryParam) {
+      setActiveCategory(categoryParam);
     }
     
-    setFilteredProducts(sortedProducts);
+    if (pageParam) {
+      const page = parseInt(pageParam);
+      if (!isNaN(page)) {
+        setCurrentPage(page);
+      }
+    } else {
+      setCurrentPage(1);
+    }
+  }, [categoryParam, pageParam]);
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortBy(e.target.value);
+    setCurrentPage(1);
   };
 
   const toggleFilter = () => {
@@ -82,32 +191,46 @@ const ProductsPage: React.FC = () => {
 
   const filterByCategory = (category: string) => {
     setActiveCategory(category);
-    
-    if (category === 'all') {
-      setFilteredProducts(products);
-    } else {
-      setFilteredProducts(products.filter(product => product.category === category));
-    }
+    setCurrentPage(1);
   };
 
-  const categories = [
-    { id: 'all', name: 'All Products' },
-    { id: 'tshirts', name: 'T-Shirts' },
-    { id: 'shorts', name: 'Fight Shorts' },
-    { id: 'hoodies', name: 'Hoodies' },
-   { id: 'gloves', name: 'MMA Gloves' },
-  ];
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePriceFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, checked } = e.target;
+    setPriceFilters(prev => ({
+      ...prev,
+      [id]: checked
+    }));
+    setCurrentPage(1);
+  };
+
+  const handleInStockChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInStockOnly(e.target.checked);
+    setCurrentPage(1);
+  };
+
+  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
 
   return (
     <div className="bg-secondary min-h-screen py-12">
-      <div className="container">
+      <div className="container mx-auto px-4">
+        {/* Back Button */}
+        <button 
+          onClick={() => navigate(-1)}
+          className="flex items-center text-gray-300 hover:text-primary mb-6 transition-colors"
+        >
+          <ChevronLeft size={20} className="mr-1" />
+          Back
+        </button>
+        
         {/* Page Header */}
         <div className="mb-10">
-          <h1 className="section-title">
-            {categoryParam 
-              ? categories.find(c => c.id === categoryParam)?.name || 'Products'
-              : 'All Products'
-            }
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-100 mb-4">
+            {categories.find(c => c.id === activeCategory)?.name || 'All Products'}
           </h1>
           <div className="flex flex-wrap items-center justify-between gap-4 mt-6">
             {/* Mobile Filter Toggle */}
@@ -117,7 +240,10 @@ const ProductsPage: React.FC = () => {
             >
               <Filter size={18} className="mr-2" />
               Filter
-              <ChevronDown size={18} className={`ml-2 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown 
+                size={18} 
+                className={`ml-2 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} 
+              />
             </button>
             
             {/* Sort & View Options */}
@@ -161,7 +287,7 @@ const ProductsPage: React.FC = () => {
           {/* Sidebar Filters - Mobile */}
           {isFilterOpen && (
             <div className="md:hidden bg-secondary-light p-4 rounded mb-6">
-              <h3 className="font-heading text-xl mb-4">Categories</h3>
+              <h3 className="text-xl font-bold mb-4 text-gray-100">Categories</h3>
               <ul className="space-y-2">
                 {categories.map(category => (
                   <li key={category.id}>
@@ -178,13 +304,52 @@ const ProductsPage: React.FC = () => {
                   </li>
                 ))}
               </ul>
+              
+              {/* Price Filter */}
+              <div className="mt-6">
+                <h3 className="text-xl font-bold mb-4 text-gray-100">Price Range</h3>
+                <div className="space-y-2">
+                  {[
+                    { id: 'under50', label: 'Under $50' },
+                    { id: 'between50And100', label: '$50 - $100' },
+                    { id: 'between100And150', label: '$100 - $150' },
+                    { id: 'over150', label: 'Over $150' }
+                  ].map(({ id, label }) => (
+                    <div key={id} className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        id={id}
+                        className="mr-2" 
+                        checked={priceFilters[id as keyof PriceFilters]}
+                        onChange={handlePriceFilterChange}
+                      />
+                      <label htmlFor={id} className="text-gray-200">{label}</label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Availability Filter */}
+              <div className="mt-6">
+                <h3 className="text-xl font-bold mb-4 text-gray-100">Availability</h3>
+                <div className="flex items-center">
+                  <input 
+                    type="checkbox" 
+                    id="inStock" 
+                    className="mr-2" 
+                    checked={inStockOnly}
+                    onChange={handleInStockChange}
+                  />
+                  <label htmlFor="inStock" className="text-gray-200">In Stock Only</label>
+                </div>
+              </div>
             </div>
           )}
           
           {/* Sidebar Filters - Desktop */}
           <div className="hidden md:block w-64 flex-shrink-0">
             <div className="bg-secondary-light p-6 rounded sticky top-24">
-              <h3 className="font-heading text-xl mb-4">Categories</h3>
+              <h3 className="text-xl font-bold mb-4 text-gray-100">Categories</h3>
               <ul className="space-y-2">
                 {categories.map(category => (
                   <li key={category.id}>
@@ -204,107 +369,76 @@ const ProductsPage: React.FC = () => {
               
               {/* Price Filter */}
               <div className="mt-8">
-                <h3 className="font-heading text-xl mb-4">Price Range</h3>
+                <h3 className="text-xl font-bold mb-4 text-gray-100">Price Range</h3>
                 <div className="space-y-2">
-                  <div className="flex items-center">
-                    <input type="checkbox" id="price-1" className="mr-2" />
-                    <label htmlFor="price-1" className="text-gray-200">Under $50</label>
-                  </div>
-                  <div className="flex items-center">
-                    <input type="checkbox" id="price-2" className="mr-2" />
-                    <label htmlFor="price-2" className="text-gray-200">$50 - $100</label>
-                  </div>
-                  <div className="flex items-center">
-                    <input type="checkbox" id="price-3" className="mr-2" />
-                    <label htmlFor="price-3" className="text-gray-200">$100 - $150</label>
-                  </div>
-                  <div className="flex items-center">
-                    <input type="checkbox" id="price-4" className="mr-2" />
-                    <label htmlFor="price-4" className="text-gray-200">Over $150</label>
-                  </div>
+                  {[
+                    { id: 'under50', label: 'Under $50' },
+                    { id: 'between50And100', label: '$50 - $100' },
+                    { id: 'between100And150', label: '$100 - $150' },
+                    { id: 'over150', label: 'Over $150' }
+                  ].map(({ id, label }) => (
+                    <div key={id} className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        id={id}
+                        className="mr-2" 
+                        checked={priceFilters[id as keyof PriceFilters]}
+                        onChange={handlePriceFilterChange}
+                      />
+                      <label htmlFor={id} className="text-gray-200">{label}</label>
+                    </div>
+                  ))}
                 </div>
               </div>
               
-              {/* Additional Filters can be added here */}
+              {/* Availability Filter */}
+              <div className="mt-8">
+                <h3 className="text-xl font-bold mb-4 text-gray-100">Availability</h3>
+                <div className="flex items-center">
+                  <input 
+                    type="checkbox" 
+                    id="inStock" 
+                    className="mr-2" 
+                    checked={inStockOnly}
+                    onChange={handleInStockChange}
+                  />
+                  <label htmlFor="inStock" className="text-gray-200">In Stock Only</label>
+                </div>
+              </div>
             </div>
           </div>
           
           {/* Product Grid */}
           <div className="flex-1">
-            {filteredProducts.length > 0 ? (
+            {displayProducts.length > 0 ? (
               <motion.div 
                 className={view === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-6'}
                 variants={staggerContainer}
                 initial="hidden"
                 animate="show"
               >
-                {filteredProducts.map(product => (
-                  <motion.div 
-                    key={product.id}
-                    variants={fadeInUp}
-                    className={`product-card ${view === 'list' ? 'flex flex-col md:flex-row' : ''}`}
-                  >
-                    <Link to={`/products/${product.id}`} className="block product-hover-zoom overflow-hidden">
-                      <div className={view === 'list' ? 'md:w-1/3' : ''}>
-                        <img 
-                          src={product.image} 
-                          alt={product.name} 
-                          className={`w-full aspect-square object-cover ${view === 'list' ? 'md:h-full' : ''}`}
-                        />
-                      </div>
-                    </Link>
-                    
-                    <div className={`p-4 ${view === 'list' ? 'md:w-2/3' : ''}`}>
-                      <div className="flex justify-between items-start mb-2">
-                        <Link to={`/products/${product.id}`} className="block">
-                          <h3 className="font-heading text-xl font-bold text-gray-100 hover:text-primary transition-colors">
-                            {product.name}
-                          </h3>
-                        </Link>
-                        {product.isNew && (
-                          <span className="bg-accent text-white text-xs font-bold px-2 py-1 rounded">
-                            NEW
-                          </span>
-                        )}
-                      </div>
-                      
-                      {view === 'list' && (
-                        <p className="text-gray-300 mb-4">{product.description}</p>
-                      )}
-                      
-                      <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center">
-                          <span className="font-bold text-primary text-lg">${product.price.toFixed(2)}</span>
-                          {product.originalPrice && (
-                            <span className="text-gray-400 line-through ml-2">${product.originalPrice.toFixed(2)}</span>
-                          )}
-                        </div>
-                        
-                        {view === 'list' ? (
-                          <Link to={`/products/${product.id}`} className="btn-primary text-sm px-4 py-2">
-                            View Details
-                          </Link>
-                        ) : (
-                          <button className="text-primary hover:text-primary-dark">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                {displayProducts.map(product => (
+                  <motion.div key={product.id} variants={fadeInUp}>
+                    <ProductCard product={product} view={view} />
                   </motion.div>
                 ))}
               </motion.div>
             ) : (
               <div className="text-center py-12">
-                <h3 className="text-2xl font-heading mb-4">No products found</h3>
+                <h3 className="text-2xl font-bold mb-4 text-gray-100">No products found</h3>
                 <p className="text-gray-300 mb-6">Try adjusting your filters or search criteria.</p>
                 <button 
-                  className="btn-primary"
+                  className="px-6 py-3 bg-primary text-secondary-dark font-medium rounded hover:bg-primary-dark transition-colors"
                   onClick={() => {
                     setActiveCategory('all');
-                    setFilteredProducts(products);
+                    setPriceFilters({
+                      under50: false,
+                      between50And100: false,
+                      between100And150: false,
+                      over150: false
+                    });
+                    setInStockOnly(false);
+                    setCurrentPage(1);
                   }}
                 >
                   View All Products
@@ -313,26 +447,12 @@ const ProductsPage: React.FC = () => {
             )}
             
             {/* Pagination */}
-            {filteredProducts.length > 0 && (
-              <div className="mt-12 flex justify-center">
-                <div className="flex">
-                  <a href="#" className="px-4 py-2 mx-1 rounded bg-secondary-light text-gray-300 hover:bg-primary hover:text-secondary-dark">
-                    &laquo;
-                  </a>
-                  <a href="#" className="px-4 py-2 mx-1 rounded bg-primary text-secondary-dark">
-                    1
-                  </a>
-                  <a href="#" className="px-4 py-2 mx-1 rounded bg-secondary-light text-gray-300 hover:bg-primary hover:text-secondary-dark">
-                    2
-                  </a>
-                  <a href="#" className="px-4 py-2 mx-1 rounded bg-secondary-light text-gray-300 hover:bg-primary hover:text-secondary-dark">
-                    3
-                  </a>
-                  <a href="#" className="px-4 py-2 mx-1 rounded bg-secondary-light text-gray-300 hover:bg-primary hover:text-secondary-dark">
-                    &raquo;
-                  </a>
-                </div>
-              </div>
+            {filteredProducts.length > PRODUCTS_PER_PAGE && (
+              <Pagination 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
             )}
           </div>
         </div>

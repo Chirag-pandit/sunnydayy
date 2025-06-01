@@ -1,7 +1,4 @@
-"use client"
-
-import type React from "react"
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -17,20 +14,8 @@ import {
   ChevronRight,
   Heart,
 } from "lucide-react"
-
-// Import the Header component
+import { useCart } from "./CartContext"
 import Header from "../components/Header"
-
-// Types
-interface CartItem {
-  id: number
-  name: string
-  price: number
-  quantity: number
-  image: string
-  size?: string
-  color?: string
-}
 
 interface RecommendedProduct {
   id: number
@@ -41,38 +26,13 @@ interface RecommendedProduct {
 }
 
 const CartPage: React.FC = () => {
-  // State for cart items (would normally be shared with Header via context or state management)
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    {
-      id: 1,
-      name: "StrikeZone Tee",
-      price: 1499,
-      quantity: 2,
-      image:
-        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-05-28_16-57-30-740.jpg-7V2fXbcrm3YNuoEoMewvuDkF6n8bXT.jpeg",
-      size: "L",
-      color: "Black",
-    },
-    {
-      id: 2,
-      name: "Fight Hard Hoodie",
-      price: 2999,
-      quantity: 1,
-      image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/T2a.jpg-rpKI56EC6ILseeUa7ppAvSHDWFH6Pc.jpeg",
-      size: "M",
-      color: "Black",
-    },
-    {
-      id: 3,
-      name: "Training Shorts",
-      price: 1299,
-      quantity: 1,
-      image:
-        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_24-08-15_11-16-12-417-3T3fYz6jkMMllMME0EgRtGmMsDdpzC.png",
-      size: "L",
-      color: "Black/Red",
-    },
-  ])
+  const { 
+    cartItems, 
+    removeFromCart, 
+    updateQuantity, 
+    clearCart,
+    cartCount 
+  } = useCart();
 
   const [couponCode, setCouponCode] = useState("")
   const [couponApplied, setCouponApplied] = useState(false)
@@ -118,19 +78,6 @@ const CartPage: React.FC = () => {
     }, 1000)
     return () => clearTimeout(timer)
   }, [])
-
-  // Functions to manage cart
-  const updateQuantity = (id: number, newQuantity: number) => {
-    if (newQuantity === 0) {
-      removeItem(id)
-      return
-    }
-    setCartItems((items) => items.map((item) => (item.id === id ? { ...item, quantity: newQuantity } : item)))
-  }
-
-  const removeItem = (id: number) => {
-    setCartItems((items) => items.filter((item) => item.id !== id))
-  }
 
   const applyCoupon = () => {
     if (couponCode.toUpperCase() === "DIWALI") {
@@ -196,8 +143,8 @@ const CartPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-secondary">
-      {/* Include the Header component */}
-      <Header />
+      {/* Include the Header component
+      <Header /> */}
 
       {/* Page Content */}
       <div className="container mx-auto px-4 py-8 mt-8">
@@ -269,13 +216,18 @@ const CartPage: React.FC = () => {
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-heading font-bold text-white">Cart Items ({cartItems.length})</h2>
-                    <button className="text-sm text-[#FF9933] hover:underline">Clear All</button>
+                    <button 
+                      className="text-sm text-[#FF9933] hover:underline"
+                      onClick={clearCart}
+                    >
+                      Clear All
+                    </button>
                   </div>
 
                   <AnimatePresence>
                     {cartItems.map((item) => (
                       <motion.div
-                        key={item.id}
+                        key={`${item.id}-${item.size}-${item.color}`}
                         variants={itemVariants}
                         exit="exit"
                         className="flex flex-col sm:flex-row items-start sm:items-center py-6 border-t border-gray-800 group"
@@ -322,7 +274,7 @@ const CartPage: React.FC = () => {
                                 <Heart size={18} />
                               </button>
                               <button
-                                onClick={() => removeItem(item.id)}
+                                onClick={() => removeFromCart(item.id)}
                                 className="text-gray-400 hover:text-red-500 transition-colors"
                               >
                                 <Trash2 size={18} />
@@ -333,7 +285,7 @@ const CartPage: React.FC = () => {
 
                         {/* Price */}
                         <div className="mt-4 sm:mt-0 w-full sm:w-auto text-right">
-                          <p className="text-[#FF9933] font-bold text-lg">{formatPrice(item.price)}</p>
+                          <p className="text-[#FF9933] font-bold text-lg">{formatPrice(item.price * item.quantity)}</p>
                           <p className="text-sm text-gray-400">
                             {item.quantity > 1 && `${formatPrice(item.price)} each`}
                           </p>
@@ -414,159 +366,161 @@ const CartPage: React.FC = () => {
                         </h3>
                         <p className="text-[#FF9933] font-bold text-sm">{formatPrice(product.price)}</p>
                       </div>
-                    </Link>
-                  ))}
-                </div>
-              </motion.div>
-            </motion.div>
+                                   </Link>
+              ))}
+            </div>
+          </motion.div>
+        </motion.div>
 
-            {/* Order Summary */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="lg:sticky lg:top-24 h-fit"
+        {/* Order Summary */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="lg:sticky lg:top-24 h-fit"
+        >
+          <div className="bg-secondary-light/30 backdrop-blur-sm rounded-lg p-6">
+            <h2 className="text-xl font-heading font-bold text-white mb-6">Order Summary</h2>
+
+            {/* Price Breakdown */}
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-300">Subtotal ({cartCount} items)</span>
+                <span className="text-white">{formatPrice(subtotal)}</span>
+              </div>
+
+              {couponApplied && (
+                <div className="flex justify-between text-green-400">
+                  <span className="flex items-center">
+                    Discount
+                    <button onClick={removeCoupon} className="ml-2 text-xs text-gray-400 hover:text-[#FF9933]">
+                      Remove
+                    </button>
+                  </span>
+                  <span>-{formatPrice(discountAmount)}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between">
+                <span className="text-gray-300">Shipping</span>
+                <span className="text-white">
+                  {deliveryOption === "express" ? formatPrice(199) : subtotal > 1999 ? "Free" : formatPrice(99)}
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-gray-300">GST (18%)</span>
+                <span className="text-white">{formatPrice(gstAmount)}</span>
+              </div>
+
+              <div className="border-t border-gray-800 pt-3 mt-3">
+                <div className="flex justify-between font-bold">
+                  <span className="text-white">Total</span>
+                  <span className="text-[#FF9933] text-xl">{formatPrice(total)}</span>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">(Including {formatPrice(gstAmount)} in taxes)</p>
+              </div>
+            </div>
+
+            {/* Coupon Code */}
+            {!couponApplied && (
+              <div className="mt-6">
+                <p className="text-sm text-gray-300 mb-2">Have a coupon code?</p>
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    placeholder="Enter coupon code"
+                    className="flex-1 bg-secondary border border-gray-700 rounded-md px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-[#FF9933]"
+                  />
+                  <button
+                    onClick={applyCoupon}
+                    className="px-4 py-2 bg-gray-700 text-white font-bold rounded-md hover:bg-gray-600 transition-colors"
+                  >
+                    Apply
+                  </button>
+                </div>
+                <div className="mt-2 text-xs text-gray-400">Try "DIWALI" for 15% off or "INDIA75" for 20% off</div>
+              </div>
+            )}
+
+            {/* Checkout Button */}
+            <Link
+              to="/checkout"
+              className="w-full mt-6 bg-[#FF9933] hover:bg-[#FF9933]/90 text-secondary-dark font-bold py-3 rounded-md transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center"
             >
-              <div className="bg-secondary-light/30 backdrop-blur-sm rounded-lg p-6">
-                <h2 className="text-xl font-heading font-bold text-white mb-6">Order Summary</h2>
+              PROCEED TO CHECKOUT
+            </Link>
 
-                {/* Price Breakdown */}
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-300">Subtotal ({cartItems.length} items)</span>
-                    <span className="text-white">{formatPrice(subtotal)}</span>
+            {/* Continue Shopping */}
+            <Link
+              to="/products"
+              className="flex items-center justify-center w-full mt-4 py-2 text-gray-300 hover:text-[#FF9933] transition-colors"
+            >
+              <ArrowLeft size={16} className="mr-2" />
+              Continue Shopping
+            </Link>
+
+            {/* Trust Badges */}
+            <div className="mt-8 pt-6 border-t border-gray-800">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center">
+                  <div className="w-8 h-8 rounded-full bg-[#FF9933]/10 flex items-center justify-center mr-3">
+                    <Shield size={16} className="text-[#FF9933]" />
                   </div>
-
-                  {couponApplied && (
-                    <div className="flex justify-between text-green-400">
-                      <span className="flex items-center">
-                        Discount
-                        <button onClick={removeCoupon} className="ml-2 text-xs text-gray-400 hover:text-[#FF9933]">
-                          Remove
-                        </button>
-                      </span>
-                      <span>-{formatPrice(discountAmount)}</span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between">
-                    <span className="text-gray-300">Shipping</span>
-                    <span className="text-white">
-                      {deliveryOption === "express" ? formatPrice(199) : subtotal > 1999 ? "Free" : formatPrice(99)}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-gray-300">GST (18%)</span>
-                    <span className="text-white">{formatPrice(gstAmount)}</span>
-                  </div>
-
-                  <div className="border-t border-gray-800 pt-3 mt-3">
-                    <div className="flex justify-between font-bold">
-                      <span className="text-white">Total</span>
-                      <span className="text-[#FF9933] text-xl">{formatPrice(total)}</span>
-                    </div>
-                    <p className="text-xs text-gray-400 mt-1">(Including {formatPrice(gstAmount)} in taxes)</p>
-                  </div>
+                  <span className="text-xs text-gray-300">Secure Checkout</span>
                 </div>
-
-                {/* Coupon Code */}
-                {!couponApplied && (
-                  <div className="mt-6">
-                    <p className="text-sm text-gray-300 mb-2">Have a coupon code?</p>
-                    <div className="flex space-x-2">
-                      <input
-                        type="text"
-                        value={couponCode}
-                        onChange={(e) => setCouponCode(e.target.value)}
-                        placeholder="Enter coupon code"
-                        className="flex-1 bg-secondary border border-gray-700 rounded-md px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-[#FF9933]"
-                      />
-                      <button
-                        onClick={applyCoupon}
-                        className="px-4 py-2 bg-gray-700 text-white font-bold rounded-md hover:bg-gray-600 transition-colors"
-                      >
-                        Apply
-                      </button>
-                    </div>
-                    <div className="mt-2 text-xs text-gray-400">Try "DIWALI" for 15% off or "INDIA75" for 20% off</div>
+                <div className="flex items-center">
+                  <div className="w-8 h-8 rounded-full bg-[#FF9933]/10 flex items-center justify-center mr-3">
+                    <Truck size={16} className="text-[#FF9933]" />
                   </div>
-                )}
-
-                {/* Checkout Button */}
-                <button className="w-full mt-6 bg-[#FF9933] hover:bg-[#FF9933]/90 text-secondary-dark font-bold py-3 rounded-md transition-all duration-300 hover:scale-105 active:scale-95">
-                  PROCEED TO CHECKOUT
-                </button>
-
-                {/* Continue Shopping */}
-                <Link
-                  to="/products"
-                  className="flex items-center justify-center w-full mt-4 py-2 text-gray-300 hover:text-[#FF9933] transition-colors"
-                >
-                  <ArrowLeft size={16} className="mr-2" />
-                  Continue Shopping
-                </Link>
-
-                {/* Trust Badges */}
-                <div className="mt-8 pt-6 border-t border-gray-800">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-[#FF9933]/10 flex items-center justify-center mr-3">
-                        <Shield size={16} className="text-[#FF9933]" />
-                      </div>
-                      <span className="text-xs text-gray-300">Secure Checkout</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-[#FF9933]/10 flex items-center justify-center mr-3">
-                        <Truck size={16} className="text-[#FF9933]" />
-                      </div>
-                      <span className="text-xs text-gray-300">Fast Delivery</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-[#FF9933]/10 flex items-center justify-center mr-3">
-                        <Gift size={16} className="text-[#FF9933]" />
-                      </div>
-                      <span className="text-xs text-gray-300">Easy Returns</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-[#FF9933]/10 flex items-center justify-center mr-3">
-                        <CreditCard size={16} className="text-[#FF9933]" />
-                      </div>
-                      <span className="text-xs text-gray-300">Secure Payment</span>
-                    </div>
-                  </div>
+                  <span className="text-xs text-gray-300">Fast Delivery</span>
                 </div>
-
-                {/* Payment Methods */}
-                <div className="mt-6 flex justify-center space-x-3">
-                  <img
-                    src="https://cdn-icons-png.flaticon.com/128/196/196566.png"
-                    alt="Visa"
-                    className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity"
-                  />
-                  <img
-                    src="https://cdn-icons-png.flaticon.com/128/196/196561.png"
-                    alt="Mastercard"
-                    className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity"
-                  />
-                  <img
-                    src="https://cdn-icons-png.flaticon.com/128/196/196565.png"
-                    alt="PayPal"
-                    className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity"
-                  />
-                  <img
-                    src="https://cdn-icons-png.flaticon.com/128/349/349221.png"
-                    alt="UPI"
-                    className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity"
-                  />
+                <div className="flex items-center">
+                  <div className="w-8 h-8 rounded-full bg-[#FF9933]/10 flex items-center justify-center mr-3">
+                    <Gift size={16} className="text-[#FF9933]" />
+                  </div>
+                  <span className="text-xs text-gray-300">Easy Returns</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-8 h-8 rounded-full bg-[#FF9933]/10 flex items-center justify-center mr-3">
+                    <CreditCard size={16} className="text-[#FF9933]" />
+                  </div>
+                  <span className="text-xs text-gray-300">Secure Payment</span>
                 </div>
               </div>
-            </motion.div>
+            </div>
+
+            {/* Payment Methods */}
+            <div className="mt-6 flex justify-center space-x-3">
+              <img
+                src="https://cdn-icons-png.flaticon.com/128/196/196566.png"
+                alt="Visa"
+                className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity"
+              />
+              <img
+                src="https://cdn-icons-png.flaticon.com/128/196/196561.png"
+                alt="Mastercard"
+                className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity"
+              />
+              <img
+                src="https://cdn-icons-png.flaticon.com/128/196/196565.png"
+                alt="PayPal"
+                className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity"
+              />
+              <img
+                src="https://cdn-icons-png.flaticon.com/128/349/349221.png"
+                alt="UPI"
+                className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity"
+              />
+            </div>
           </div>
-        )}
+        </motion.div>
       </div>
-    </div>
+    )}
+  </div>
+</div>
   )
 }
-
 export default CartPage

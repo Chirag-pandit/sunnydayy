@@ -1,107 +1,82 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Instagram } from 'lucide-react';
-import SunnyDayLogo from './SunnyDayLogo';
-import { contactInfo } from '../data/products';
+import { Sun, Instagram, Facebook, Twitter } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-secondary-dark text-gray-100 pt-12 pb-6">
-      <div className="container">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
-          {/* Column 1 - About */}
+    <footer className="bg-black text-white pt-12 pb-6">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <SunnyDayLogo className="mb-4" />
-            <p className="mb-4">
-              Premium MMA gear designed for fighters, by fighters. 
-              Built to withstand the toughest training sessions and fights.
+            <Link to="/" className="flex items-center text-2xl font-bold mb-4">
+              <Sun className="w-6 h-6 mr-2 text-red-600" />
+              <span>SUNNYDAY</span>
+            </Link>
+            <p className="text-gray-400 text-sm mb-4">
+              Premium MMA and combat sports apparel for fighters and fans alike.
             </p>
             <div className="flex space-x-4">
-              <a href={contactInfo.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+              <a href="#" className="text-gray-400 hover:text-white transition-colors">
                 <Instagram size={20} />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                <Facebook size={20} />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                <Twitter size={20} />
               </a>
             </div>
           </div>
 
-          {/* Column 2 - Quick Links */}
           <div>
-            <h3 className="text-xl font-heading mb-4 uppercase">Quick Links</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/products" className="hover:text-primary transition-colors">All Products</Link>
-              </li>
-              <li>
-                <Link to="/products?category=tshirts" className="hover:text-primary transition-colors">T-Shirts</Link>
-              </li>
-              <li>
-                <Link to="/products?category=shorts" className="hover:text-primary transition-colors">Shorts</Link>
-              </li>
-              <li>
-                <Link to="/products?category=hoodies" className="hover:text-primary transition-colors">Hoodies</Link>
-              </li>
-              <li>
-                <Link to="/about" className="hover:text-primary transition-colors">About Us</Link>
-              </li>
-              <li>
-                <Link to="/contact" className="hover:text-primary transition-colors">Contact</Link>
-              </li>
+            <h3 className="text-lg font-medium mb-4">Shop</h3>
+            <ul className="space-y-2 text-gray-400">
+              <li><Link to="/products" className="hover:text-white transition-colors">All Products</Link></li>
+              <li><Link to="/products/category/tshirt" className="hover:text-white transition-colors">T-Shirts</Link></li>
+              <li><Link to="/products/category/hoodie" className="hover:text-white transition-colors">Hoodies</Link></li>
+              <li><Link to="/products/category/shorts" className="hover:text-white transition-colors">Shorts</Link></li>
+              <li><Link to="/products/new" className="hover:text-white transition-colors">New Arrivals</Link></li>
             </ul>
           </div>
 
-          {/* Column 3 - Customer Service */}
           <div>
-            <h3 className="text-xl font-heading mb-4 uppercase">Customer Service</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/shipping" className="hover:text-primary transition-colors">Shipping Information</Link>
-              </li>
-              <li>
-                <Link to="/returns" className="hover:text-primary transition-colors">Returns & Exchanges</Link>
-              </li>
-              <li>
-                <Link to="/size-guide" className="hover:text-primary transition-colors">Size Guide</Link>
-              </li>
-              <li>
-                <Link to="/faq" className="hover:text-primary transition-colors">FAQ</Link>
-              </li>
-              <li>
-                <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
-              </li>
-              <li>
-                <Link to="/terms" className="hover:text-primary transition-colors">Terms & Conditions</Link>
-              </li>
+            <h3 className="text-lg font-medium mb-4">Help</h3>
+            <ul className="space-y-2 text-gray-400">
+              <li><Link to="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
+              <li><Link to="/shipping" className="hover:text-white transition-colors">Shipping & Returns</Link></li>
+              <li><Link to="/size-guide" className="hover:text-white transition-colors">Size Guide</Link></li>
+              <li><Link to="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
+              <li><Link to="/track-order" className="hover:text-white transition-colors">Track Order</Link></li>
             </ul>
           </div>
 
-          {/* Column 4 - Contact */}
           <div>
-            <h3 className="text-xl font-heading mb-4 uppercase">Contact Us</h3>
-            <ul className="space-y-3">
-              <li className="flex items-center">
-                <Phone size={20} className="mr-2 text-primary flex-shrink-0" />
-                <a href={`tel:${contactInfo.phone}`} className="hover:text-primary transition-colors">
-                  {contactInfo.phone}
-                </a>
-              </li>
-              <li className="flex items-center">
-                <Mail size={20} className="mr-2 text-primary flex-shrink-0" />
-                <a href={`mailto:${contactInfo.email}`} className="hover:text-primary transition-colors">
-                  {contactInfo.email}
-                </a>
-              </li>
-              <li className="flex items-center">
-                <Instagram size={20} className="mr-2 text-primary flex-shrink-0" />
-                <a href={contactInfo.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                  @sunnydayofficials
-                </a>
-              </li>
-            </ul>
+            <h3 className="text-lg font-medium mb-4">Newsletter</h3>
+            <p className="text-gray-400 text-sm mb-4">
+              Subscribe to get special offers, free giveaways, and new product alerts.
+            </p>
+            <form className="flex">
+              <input
+                type="email"
+                placeholder="Your email"
+                className="bg-gray-800 text-white px-4 py-2 rounded-l-md w-full focus:outline-none focus:ring-1 focus:ring-red-500"
+              />
+              <button
+                type="submit"
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-r-md transition-colors"
+              >
+                Subscribe
+              </button>
+            </form>
           </div>
         </div>
 
-        {/* Copyright */}
-        <div className="border-t border-gray-700 pt-6 text-center text-gray-400">
-          <p>&copy; {new Date().getFullYear()} SunnyDay MMA. All rights reserved.</p>
+        <div className="border-t border-gray-800 mt-8 pt-6 text-center text-gray-500 text-sm">
+          <p>© {new Date().getFullYear()} SunnyDay. All rights reserved.</p>
+          <div className="flex justify-center space-x-4 mt-2">
+            <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+          </div>
         </div>
       </div>
     </footer>

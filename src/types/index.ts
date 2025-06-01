@@ -1,24 +1,32 @@
-export interface Product {
-  id: string;
+export type Product = {
+  id: number;
   name: string;
-  description: string;
   price: number;
   originalPrice?: number;
-  category: string;
-  image: string;
+  category: 'tshirt' | 'hoodie' | 'shorts' | 'coming-soon';
   images: string[];
-  inStock: boolean;
-  isNew: boolean;
-  date: string;
+  isNew?: boolean;
   rating: number;
-  colors: string[];
+  reviewCount: number;
+  description: string;
   sizes: string[];
-  shippingInfo: string;
-  sizeChart: Record<string, string>;
+  colors: string[];
+  material: string;
+  careInstructions: string[];
+  stock: number;
+  inStock?: boolean;
+  shippingInfo?: string;
 }
 
-export interface PaginationProps {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
+export interface Category {
+  id: string;
+  name: string;
+  count: number;
+}
+
+export interface PriceRange {
+  id: string;
+  label: string;
+  min: number;
+  max: number | null;
 }
