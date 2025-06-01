@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Filter, ChevronDown, Grid3X3, List, ChevronLeft, Star, ShoppingCart, ChevronRight } from "lucide-react";
@@ -249,23 +249,22 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
           <ChevronLeft size={20} />
         </button>
 
-        {pageNumbers.map((page, index) => (
-          <React.Fragment key={index}>
-            {page === ELLIPSIS ? (
-              <span className="px-3 py-1 text-gray-500">{ELLIPSIS}</span>
-            ) : (
-              <button
-                onClick={() => onPageChange(page as number)}
-                className={`px-3 py-1 rounded-md min-w-[40px] ${
-                  currentPage === page ? "bg-red-600 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                }`}
-                aria-current={currentPage === page ? "page" : undefined}
-              >
-                {page}
-              </button>
-            )}
-          </React.Fragment>
-        ))}
+    {pageNumbers.map((page, index) => (
+  page === ELLIPSIS ? (
+    <span key={index} className="px-3 py-1 text-gray-500">{ELLIPSIS}</span>
+  ) : (
+    <button
+      key={index}
+      onClick={() => onPageChange(page as number)}
+      className={`px-3 py-1 rounded-md min-w-[40px] ${
+        currentPage === page ? "bg-red-600 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"
+      }`}
+      aria-current={currentPage === page ? "page" : undefined}
+    >
+      {page}
+    </button>
+  )
+))}
 
         <button
           onClick={() => onPageChange(currentPage + 1)}
