@@ -5,15 +5,39 @@ import { ArrowRight, Award, ShieldCheck, Truck, Instagram } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination, Navigation } from 'swiper/modules';
 import 'swiper/css';
+import { AppleCardsCarouselDemo } from '@/components/AppleCardsCarouseDemo';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 import ProductSection from '../components/ProductSection';
+
+import MaskContainer from '@/components/ui/svg-mask-effect';
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
   transition: { duration: 0.6 }
 };
+
+const testimonials = [
+  {
+    quote: "This product really helped improve my workflow!",
+    name: "Kanak Sharma",
+    designation: "Frontend Developer",
+    src: "https://images.unsplash.com/photo-1642394079532-8ce715339e6e?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", // Replace with your image URL
+  },
+  {
+    quote: "Amazing experience and great support team.",
+    name: "Rahul Verma",
+    designation: "UI/UX Designer",
+    src: "https://images.unsplash.com/photo-1630196215412-b704bb47bea4?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  },
+  {
+    quote: "Highly recommend this to all developers!",
+    name: "Aisha Khan",
+    designation: "Software Engineer",
+    src: "https://images.unsplash.com/photo-1602094880690-069c9083f406?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  },
+];
 
 const HomePage: React.FC = () => {
   return (
@@ -22,6 +46,7 @@ const HomePage: React.FC = () => {
       <section className="relative bg-hero-pattern bg-cover bg-center py-20 md:py-32">
         <div className="container">
           <div className="max-w-2xl">
+            
             <motion.h1 
               className="text-5xl md:text-6xl lg:text-7xl font-heading font-extrabold text-primary mb-4 uppercase"
               initial={{ opacity: 0, y: -20 }}
@@ -38,6 +63,7 @@ const HomePage: React.FC = () => {
             >
               Premium MMA fight gear designed for champions. Elevate your performance with SunnyDay equipment.
             </motion.p>
+              
             <motion.div
               className="flex flex-col sm:flex-row gap-4"
               initial={{ opacity: 0, y: 20 }}
@@ -50,6 +76,8 @@ const HomePage: React.FC = () => {
               <Link to="/about" className="btn-secondary">
                 OUR STORY
               </Link>
+
+              
             </motion.div>
           </div>
         </div>
@@ -293,6 +321,10 @@ const HomePage: React.FC = () => {
             FIGHTER <span className="text-primary">TESTIMONIALS</span>
           </motion.h2>
 
+
+          {/* <AnimatedTestimonials testimonials={testimonials} autoplay={true} /> */}
+             <AppleCardsCarouselDemo/>
+
           <Swiper
             spaceBetween={30}
             centeredSlides={true}
@@ -440,13 +472,15 @@ const HomePage: React.FC = () => {
               transition={{ delay: 0.1 }}
             >
               <img 
-                src="https://images.pexels.com/photos/6295843/pexels-photo-6295843.jpeg" 
+                src="https://images.unsplash.com/photo-1708134003412-7a05fe510a5f?q=80&w=1688&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
                 alt="MMA Training" 
                 className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-110"
               />
-              <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Instagram size={32} className="text-white" />
-              </div>
+              <a href="https://www.instagram.com/sunnydayofficials/" target="_blank" rel="noopener noreferrer">
+                <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Instagram size={32} className="text-white" />
+                  </div>
+              </a>
             </motion.div>
             
             {/* Instagram Post 2 */}
@@ -463,9 +497,12 @@ const HomePage: React.FC = () => {
                 alt="MMA Equipment" 
                 className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-110"
               />
-              <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Instagram size={32} className="text-white" />
-              </div>
+              <a href="https://www.instagram.com/sunnydayofficials/" target="_blank" rel="noopener noreferrer">
+                <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+
+                  <Instagram size={32} className="text-white" />
+                </div>
+              </a>
             </motion.div>
             
             {/* Instagram Post 3 */}
@@ -482,9 +519,12 @@ const HomePage: React.FC = () => {
                 alt="Fighter Training" 
                 className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-110"
               />
+              <a href="https://www.instagram.com/sunnydayofficials/" target="_blank" rel="noopener noreferrer">
+
               <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              
                 <Instagram size={32} className="text-white" />
-              </div>
+              </div></a>
             </motion.div>
             
             {/* Instagram Post 4 */}
@@ -501,9 +541,11 @@ const HomePage: React.FC = () => {
                 alt="MMA Sparring" 
                 className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-110"
               />
+              <a href="https://www.instagram.com/sunnydayofficials/" target="_blank" rel="noopener noreferrer">
+
               <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <Instagram size={32} className="text-white" />
-              </div>
+              </div></a>
             </motion.div>
           </div>
         </div>

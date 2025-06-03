@@ -29,12 +29,13 @@ const Footer: React.FC = () => {
           </div>
 
           <div>
+            
             <h3 className="text-lg font-medium mb-4">Shop</h3>
             <ul className="space-y-2 text-gray-400">
               <li><Link to="/products" className="hover:text-white transition-colors">All Products</Link></li>
-              <li><Link to="/products/category/tshirt" className="hover:text-white transition-colors">T-Shirts</Link></li>
-              <li><Link to="/products/category/hoodie" className="hover:text-white transition-colors">Hoodies</Link></li>
-              <li><Link to="/products/category/shorts" className="hover:text-white transition-colors">Shorts</Link></li>
+              <li><Link to="/products/category/tshirt?category=tshirt" className="hover:text-white transition-colors">T-Shirts</Link></li>
+              <li><Link to="/products/category/tshirt?category=hoodie" className="hover:text-white transition-colors">Hoodies</Link></li>
+              <li><Link to="/products/category/tshirt?category=shorts" className="hover:text-white transition-colors">Shorts</Link></li>
               <li><Link to="/products/new" className="hover:text-white transition-colors">New Arrivals</Link></li>
             </ul>
           </div>
