@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ShoppingCart, Heart, Star, ChevronDown, Truck, Shield } from 'lucide-react';
+import { useCart } from './CartContext'; // Update the path as needed
 
 interface Product {
   id: number;
@@ -17,16 +18,6 @@ interface Product {
   images: string[];
   colors: string[];
   sizes: string[];
-}
-
-interface CartItem {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-  image: string;
-  size: string;
-  color: string;
 }
 
 // Mock data
@@ -112,21 +103,10 @@ const fadeIn = {
   },
 };
 
-// Mock cart context
-const useCart = () => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-
-  const addToCart = (item: CartItem) => {
-    setCartItems((prev) => [...prev, item]);
-  };
-
-  return { cartItems, addToCart };
-};
-
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { addToCart, cartItems } = useCart();
+  const { cartItems, addToCart } = useCart();
 
   const productId = id ? parseInt(id) : null;
   const product = allProducts.find((p) => p.id === productId);
