@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { Link } from "react-router-dom"
 
 interface Product {
   id: number
@@ -134,6 +135,7 @@ export default function ProductSection() {
               </div>
 
               {/* Product Info */}
+              <Link to="products">
               <div className="p-6 transform transition-all duration-300">
                 <h3 className="text-xl font-bold text-white mb-2 transition-colors duration-300 hover:text-gray-300">
                   {product.name}
@@ -143,6 +145,7 @@ export default function ProductSection() {
                   SHOP NOW
                 </button>
               </div>
+              </Link>
             </div>
           ))}
         </div>

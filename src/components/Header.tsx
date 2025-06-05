@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Sun, Search, User, ShoppingCart, X } from 'lucide-react';
+import { Sun, Search, User,Heart, ShoppingCart, X } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../pages/CartContext';
 
@@ -187,6 +187,15 @@ const Header = () => {
               </button>
             )}
           </div>
+
+            <Link 
+            to="/wishlist" 
+            className="text-white hover:text-red-500 transition-colors"
+            aria-label="Account"
+          >
+            <Heart className="h-5 w-5" />
+             
+          </Link>
 
           <Link 
             to="/account" 

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ShoppingCart, Heart, Star, ChevronDown, Truck, Shield } from 'lucide-react';
-import { useCart } from './CartContext'; // Update the path as needed
+import { useCart } from './CartContext';
+import { useWishlist } from './WishlistContext'; // Import the wishlist context
 
 interface Product {
   id: number;
@@ -107,6 +108,7 @@ const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { cartItems, addToCart } = useCart();
+  const { wishlist, addToWishlist, removeFromWishlist, isInWishlist } = useWishlist(); // Wishlist hooks
 
   const productId = id ? parseInt(id) : null;
   const product = allProducts.find((p) => p.id === productId);
@@ -151,6 +153,23 @@ const ProductDetailPage: React.FC = () => {
     setTimeout(() => {
       setIsAddingToCart(false);
     }, 1000);
+  };
+
+  const handleWishlistToggle = () => {
+    if (!product) return;
+    
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        images: product.images,
+        description: product.description,
+        category: product.category
+      });
+    }
   };
 
   if (!product) {
@@ -254,8 +273,16 @@ const ProductDetailPage: React.FC = () => {
             <div>
               <div className="flex justify-between items-start">
                 <h1 className="text-3xl font-bold text-gray-100">{product.name}</h1>
-                <button className="text-gray-300 hover:text-red-500 transition-colors" aria-label="Add to wishlist">
-                  <Heart size={24} />
+                <button 
+                  className="text-gray-300 hover:text-red-500 transition-colors" 
+                  aria-label={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
+                  onClick={handleWishlistToggle}
+                >
+                  <Heart 
+                    size={24} 
+                    fill={isInWishlist(product.id) ? "currentColor" : "none"} 
+                    className={isInWishlist(product.id) ? "text-red-500" : ""}
+                  />
                 </button>
               </div>
 

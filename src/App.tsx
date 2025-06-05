@@ -8,11 +8,14 @@ import CartPage from './pages/CartPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import NotFoundPage from './pages/NotFoundPage';
-import { CartProvider } from './pages/CartContext' // ✅ Import your CartProvider
+import { CartProvider } from './pages/CartContext'// ✅ Import your CartProvider
+import { WishlistProvider } from './pages/WishlistContext'; 
+import WishlistPage from './pages/WishlistPage';
 
 const App: React.FC = () => {
   return (
     <CartProvider> {/* ✅ Wrap everything in CartProvider */}
+    <WishlistProvider>
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
@@ -21,10 +24,14 @@ const App: React.FC = () => {
           <Route path="products/:id" element={<ProductDetailPage />} />
           <Route path="cart" element={<CartPage />} />
           <Route path="about" element={<AboutPage />} />
+          <Route path="/wishlist" element={<WishlistPage />} />
+           
+          
           <Route path="contact" element={<ContactPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
+      </WishlistProvider>
     </CartProvider>
   );
 };

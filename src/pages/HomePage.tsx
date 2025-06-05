@@ -117,7 +117,7 @@ const HomePage: React.FC = () => {
               <div className="absolute bottom-0 left-0 p-6">
                 <h3 className="text-2xl font-heading font-bold text-primary mb-2">MMA T-Shirt</h3>
                 <p className="text-gray-100 mb-4">Precision-engineered for perfect strikes.</p>
-                <Link to="/products?category=gloves" className="inline-flex items-center text-primary font-heading hover:text-primary-light transition-colors">
+                <Link to="/products?category=tshirt" className="inline-flex items-center text-primary font-heading hover:text-primary-light transition-colors">
                   SHOP T-Shirt <ArrowRight size={16} className="ml-2" />
                 </Link>
               </div>
@@ -169,7 +169,7 @@ const HomePage: React.FC = () => {
               <div className="absolute bottom-0 left-0 p-6">
                 <h3 className="text-2xl font-heading font-bold text-primary mb-2">MMA HOODIE</h3>
                 <p className="text-gray-100 mb-4">Superior protection during intense training.</p>
-                <Link to="/products?category=rashguards" className="inline-flex items-center text-primary font-heading hover:text-primary-light transition-colors">
+                <Link to="/products?category=hoodie" className="inline-flex items-center text-primary font-heading hover:text-primary-light transition-colors">
                   SHOP HOODIE <ArrowRight size={16} className="ml-2" />
                 </Link>
               </div>
