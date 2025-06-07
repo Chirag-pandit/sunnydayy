@@ -276,17 +276,7 @@ const ContactPage: React.FC = () => {
               </h2>
               
               {/* Map */}
-              <div className="bg-secondary-light rounded-lg overflow-hidden h-72 mb-8">
-                <div className="h-full w-full bg-secondary-dark flex items-center justify-center">
-                  {/* This would be replaced with an actual map */}
-                  <div className="text-center">
-                    <MapPin size={48} className="text-primary mx-auto mb-4" />
-                    <p className="text-gray-300 text-lg">
-                      123 Fighter Street, Octagon City, CA 90210
-                    </p>
-                  </div>
-                </div>
-              </div>
+              
               
               {/* Additional Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
