@@ -13,17 +13,17 @@ interface CartItem {
 interface CartContextType {
   cartItems: CartItem[];
   addToCart: (product: CartItem) => void;
-  removeFromCart: (id: number) => void;
-  updateQuantity: (id: number, quantity: number) => void;
+  removeFromCart: (id: number, size?: string, color?: string) => void;
+  updateQuantity: (id: number, quantity: number, size?: string, color?: string) => void;
   clearCart: () => void;
   cartCount: number;
+  cartTotal: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
-    // Load cart from localStorage if available
     if (typeof window !== 'undefined') {
       const savedCart = localStorage.getItem('cart');
       return savedCart ? JSON.parse(savedCart) : [];
@@ -32,8 +32,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
 
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const cartTotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
 
-  // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cartItems));
   }, [cartItems]);
@@ -60,17 +60,30 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   };
 
-  const removeFromCart = (id: number) => {
-    setCartItems(prevItems => prevItems.filter(item => item.id !== id));
+  const removeFromCart = (id: number, size?: string, color?: string) => {
+    setCartItems(prevItems => 
+      prevItems.filter(item => 
+        !(item.id === id && 
+          (size === undefined || item.size === size) && 
+          (color === undefined || item.color === color))
+      )
+    );
   };
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = (id: number, quantity: number, size?: string, color?: string) => {
     if (quantity <= 0) {
-      removeFromCart(id);
+      removeFromCart(id, size, color);
       return;
     }
+    
     setCartItems(prevItems =>
-      prevItems.map(item => (item.id === id ? { ...item, quantity } : item))
+      prevItems.map(item =>
+        item.id === id && 
+        (size === undefined || item.size === size) && 
+        (color === undefined || item.color === color)
+          ? { ...item, quantity }
+          : item
+      )
     );
   };
 
@@ -86,7 +99,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         removeFromCart, 
         updateQuantity, 
         clearCart,
-        cartCount
+        cartCount,
+        cartTotal
       }}
     >
       {children}
