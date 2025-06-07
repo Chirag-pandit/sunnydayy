@@ -11,6 +11,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import { CartProvider } from './pages/CartContext'// ✅ Import your CartProvider
 import { WishlistProvider } from './pages/WishlistContext'; 
 import WishlistPage from './pages/WishlistPage';
+import Profile from './pages/profile';
 
 const App: React.FC = () => {
   return (
@@ -25,10 +26,9 @@ const App: React.FC = () => {
           <Route path="cart" element={<CartPage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="/wishlist" element={<WishlistPage />} />
-           
-          
           <Route path="contact" element={<ContactPage />} />
           <Route path="*" element={<NotFoundPage />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
       </Routes>
       </WishlistProvider>

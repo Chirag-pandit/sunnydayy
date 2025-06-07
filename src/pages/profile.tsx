@@ -1,10 +1,9 @@
 "use client"
 
-import React, { useState, useRef, useCallback } from "react"
-
+import type React from "react"
+import { useState, useRef, useCallback } from "react"
 import {
   User,
-  Heart,
   Settings,
   Package,
   Bell,
@@ -18,10 +17,24 @@ import {
   EyeOff,
   Save,
   X,
-  ShoppingCart,
   Check,
   AlertCircle,
+  MapPin,
+  CreditCard,
+  Shield,
+  Globe,
+  Moon,
+  Sun,
+  Smartphone,
+  Mail,
+  Lock,
+  Trash2,
+  Download,
+  LogOut,
 } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+
+
 
 interface Order {
   id: string
@@ -32,20 +45,36 @@ interface Order {
   image: string
 }
 
-interface WishlistItem {
-  id: string
-  name: string
-  price: number
-  image: string
-  inStock: boolean
-}
-
 interface UserProfile {
   firstName: string
   lastName: string
   email: string
   phone: string
   avatar: string
+  dateOfBirth: string
+  gender: string
+  bio: string
+}
+
+interface Address {
+  id: string
+  type: "home" | "work" | "other"
+  name: string
+  street: string
+  city: string
+  state: string
+  zipCode: string
+  country: string
+  isDefault: boolean
+}
+
+interface PaymentMethod {
+  id: string
+  type: "card" | "upi" | "wallet"
+  name: string
+  last4?: string
+  expiryDate?: string
+  isDefault: boolean
 }
 
 interface NotificationSettings {
@@ -53,9 +82,29 @@ interface NotificationSettings {
   newProducts: boolean
   specialOffers: boolean
   marketingEmails: boolean
+  smsNotifications: boolean
+  pushNotifications: boolean
+}
+
+interface PrivacySettings {
+  profileVisibility: "public" | "private" | "friends"
+  showEmail: boolean
+  showPhone: boolean
+  dataCollection: boolean
+  analytics: boolean
+}
+
+interface AppSettings {
+  theme: "light" | "dark" | "auto"
+  language: string
+  currency: string
+  timezone: string
+  autoSave: boolean
+  twoFactorAuth: boolean
 }
 
 const Profile: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview")
   const [isEditing, setIsEditing] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -72,6 +121,9 @@ const Profile: React.FC = () => {
     email: "alex@example.com",
     phone: "+91 98765 43210",
     avatar: "/api/placeholder/128/128",
+    dateOfBirth: "1995-06-15",
+    gender: "male",
+    bio: "Professional MMA fighter and fitness enthusiast. Training hard every day to achieve greatness.",
   })
 
   // Password State
@@ -81,16 +133,81 @@ const Profile: React.FC = () => {
     confirm: "",
   })
 
+  // Addresses State
+  const [addresses, setAddresses] = useState<Address[]>([
+    {
+      id: "addr-1",
+      type: "home",
+      name: "Home Address",
+      street: "123 Fighter Street, Apt 4B",
+      city: "Mumbai",
+      state: "Maharashtra",
+      zipCode: "400001",
+      country: "India",
+      isDefault: true,
+    },
+    {
+      id: "addr-2",
+      type: "work",
+      name: "Gym Address",
+      street: "456 Training Avenue",
+      city: "Mumbai",
+      state: "Maharashtra",
+      zipCode: "400002",
+      country: "India",
+      isDefault: false,
+    },
+  ])
+
+  // Payment Methods State
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
+    {
+      id: "pm-1",
+      type: "card",
+      name: "Visa ending in 4242",
+      last4: "4242",
+      expiryDate: "12/26",
+      isDefault: true,
+    },
+    {
+      id: "pm-2",
+      type: "upi",
+      name: "alex@paytm",
+      isDefault: false,
+    },
+  ])
+
   // Notification Settings State
   const [notifications, setNotifications] = useState<NotificationSettings>({
     orderUpdates: true,
     newProducts: true,
     specialOffers: false,
     marketingEmails: false,
+    smsNotifications: true,
+    pushNotifications: true,
+  })
+
+  // Privacy Settings State
+  const [privacySettings, setPrivacySettings] = useState<PrivacySettings>({
+    profileVisibility: "private",
+    showEmail: false,
+    showPhone: false,
+    dataCollection: true,
+    analytics: false,
+  })
+
+  // App Settings State
+  const [appSettings, setAppSettings] = useState<AppSettings>({
+    theme: "dark",
+    language: "en",
+    currency: "INR",
+    timezone: "Asia/Kolkata",
+    autoSave: true,
+    twoFactorAuth: false,
   })
 
   // Orders State
-  const orders: Order[] = [
+  const [orders] = useState<Order[]>([
     {
       id: "ORD-001",
       date: "2024-12-15",
@@ -115,24 +232,6 @@ const Profile: React.FC = () => {
       items: 1,
       image: "/api/placeholder/60/60",
     },
-  ]
-
-  // Wishlist State
-  const [wishlist, setWishlist] = useState<WishlistItem[]>([
-    {
-      id: "W-001",
-      name: "Warrior Combat Tee",
-      price: 1999,
-      image: "/api/placeholder/80/80",
-      inStock: true,
-    },
-    {
-      id: "W-002",
-      name: "MMA Fighter Shorts",
-      price: 2299,
-      image: "/api/placeholder/80/80",
-      inStock: false,
-    },
   ])
 
   // Image Upload Handler
@@ -140,7 +239,6 @@ const Profile: React.FC = () => {
     const file = event.target.files?.[0]
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        // 5MB limit
         alert("File size must be less than 5MB")
         return
       }
@@ -174,26 +272,32 @@ const Profile: React.FC = () => {
     setNotifications((prev) => ({ ...prev, [setting]: !prev[setting] }))
   }
 
-  // Save Profile
+  const handlePrivacyToggle = (setting: keyof PrivacySettings) => {
+    if (setting === "profileVisibility") return
+    setPrivacySettings((prev) => ({ ...prev, [setting]: !prev[setting] }))
+  }
+
+  const handleAppSettingToggle = (setting: keyof AppSettings) => {
+    if (["theme", "language", "currency", "timezone"].includes(setting)) return
+    setAppSettings((prev) => ({ ...prev, [setting]: !prev[setting] }))
+  }
+
+  // Save Functions
   const handleSaveProfile = async () => {
     setSaveStatus("saving")
-
-    // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
     try {
-      // Here you would make your actual API call
       console.log("Saving profile:", userProfile)
       setSaveStatus("saved")
       setIsEditing(false)
       setTimeout(() => setSaveStatus("idle"), 3000)
-    } catch {
+    } catch (_) {
       setSaveStatus("error")
       setTimeout(() => setSaveStatus("idle"), 3000)
     }
   }
 
-  // Save Password
   const handleSavePassword = async () => {
     if (passwords.new !== passwords.confirm) {
       alert("New passwords don't match!")
@@ -208,55 +312,108 @@ const Profile: React.FC = () => {
     setSaveStatus("saving")
 
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500))
       console.log("Password updated")
       setPasswords({ current: "", new: "", confirm: "" })
       setSaveStatus("saved")
       setTimeout(() => setSaveStatus("idle"), 3000)
-    } catch {
+    } catch (_) {
       setSaveStatus("error")
       setTimeout(() => setSaveStatus("idle"), 3000)
     }
   }
 
-  // Save Notifications
-  const handleSaveNotifications = async () => {
+  const handleSaveSettings = async (type: string) => {
     setSaveStatus("saving")
 
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log("Notifications updated:", notifications)
+      console.log(`${type} settings updated`)
       setSaveStatus("saved")
       setTimeout(() => setSaveStatus("idle"), 3000)
-    } catch {
+    } catch (_) {
       setSaveStatus("error")
       setTimeout(() => setSaveStatus("idle"), 3000)
     }
   }
 
-  // Wishlist Actions
-  const removeFromWishlist = (id: string) => {
-    setWishlist((prev) => prev.filter((item) => item.id !== id))
+  // Address Functions
+  const addAddress = () => {
+    const newAddress: Address = {
+      id: `addr-${Date.now()}`,
+      type: "other",
+      name: "New Address",
+      street: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      country: "India",
+      isDefault: false,
+    }
+    setAddresses((prev) => [...prev, newAddress])
   }
 
-  const addToCart = (item: WishlistItem) => {
-    if (!item.inStock) return
-
-    // Simulate adding to cart
-    console.log("Added to cart:", item.name)
-    alert(`${item.name} added to cart!`)
+  const removeAddress = (id: string) => {
+    setAddresses((prev) => prev.filter((addr) => addr.id !== id))
   }
 
-  const notifyWhenAvailable = (item: WishlistItem) => {
-    console.log("Notify when available:", item.name)
-    alert(`You'll be notified when ${item.name} is back in stock!`)
+  const setDefaultAddress = (id: string) => {
+    setAddresses((prev) =>
+      prev.map((addr) => ({
+        ...addr,
+        isDefault: addr.id === id,
+      })),
+    )
+  }
+
+  // Payment Method Functions
+  const addPaymentMethod = () => {
+    const newMethod: PaymentMethod = {
+      id: `pm-${Date.now()}`,
+      type: "card",
+      name: "New Payment Method",
+      isDefault: false,
+    }
+    setPaymentMethods((prev) => [...prev, newMethod])
+  }
+
+  const removePaymentMethod = (id: string) => {
+    setPaymentMethods((prev) => prev.filter((pm) => pm.id !== id))
+  }
+
+  const setDefaultPaymentMethod = (id: string) => {
+    setPaymentMethods((prev) =>
+      prev.map((pm) => ({
+        ...pm,
+        isDefault: pm.id === id,
+      })),
+    )
   }
 
   // Order Actions
   const viewOrderDetails = (orderId: string) => {
     console.log("Viewing order:", orderId)
     alert(`Opening order details for ${orderId}`)
+  }
+
+  // Account Actions
+  const downloadData = () => {
+    console.log("Downloading user data...")
+    alert("Your data download will begin shortly!")
+  }
+
+  const deleteAccount = () => {
+    const confirmed = confirm("Are you sure you want to delete your account? This action cannot be undone.")
+    if (confirmed) {
+      console.log("Account deletion requested")
+      alert("Account deletion request submitted. You will receive a confirmation email.")
+    }
+  }
+
+  const logout = () => {
+    console.log("Logging out...")
+    alert("You have been logged out successfully!")
+    navigate("/login")
   }
 
   const getStatusColor = (status: string) => {
@@ -288,7 +445,6 @@ const Profile: React.FC = () => {
   const tabItems = [
     { id: "overview", label: "Overview", icon: User },
     { id: "orders", label: "Orders", icon: Package },
-    { id: "wishlist", label: "Wishlist", icon: Heart },
     { id: "settings", label: "Settings", icon: Settings },
   ]
 
@@ -407,8 +563,8 @@ const Profile: React.FC = () => {
                   <div className="text-sm text-gray-400">Total Spent</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{wishlist.length}</div>
-                  <div className="text-sm text-gray-400">Wishlist</div>
+                  <div className="text-2xl font-bold text-white">{addresses.length}</div>
+                  <div className="text-sm text-gray-400">Addresses</div>
                 </div>
               </div>
             </div>
@@ -478,6 +634,27 @@ const Profile: React.FC = () => {
                   )
                 })}
               </nav>
+
+              {/* Quick Actions */}
+              <div className="mt-8 pt-6 border-t border-zinc-700">
+                <h4 className="text-sm font-bold text-gray-400 mb-4 uppercase tracking-wide">Quick Actions</h4>
+                <div className="space-y-2">
+                  <button
+                    onClick={downloadData}
+                    className="w-full flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all duration-200"
+                  >
+                    <Download size={16} />
+                    <span className="text-sm">Download Data</span>
+                  </button>
+                  <button
+                    onClick={logout}
+                    className="w-full flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all duration-200"
+                  >
+                    <LogOut size={16} />
+                    <span className="text-sm">Logout</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -527,14 +704,14 @@ const Profile: React.FC = () => {
 
                       <div
                         className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-6 hover:scale-105 transition-all duration-300 cursor-pointer"
-                        onClick={() => setActiveTab("wishlist")}
+                        onClick={() => setActiveTab("settings")}
                       >
                         <div className="flex items-center justify-between mb-4">
-                          <Heart className="text-purple-400" size={24} />
-                          <span className="text-purple-400 text-sm font-medium">Items</span>
+                          <MapPin className="text-purple-400" size={24} />
+                          <span className="text-purple-400 text-sm font-medium">Saved</span>
                         </div>
-                        <div className="text-2xl font-bold text-white mb-1">{wishlist.length}</div>
-                        <div className="text-gray-400 text-sm">Wishlist Items</div>
+                        <div className="text-2xl font-bold text-white mb-1">{addresses.length}</div>
+                        <div className="text-gray-400 text-sm">Addresses</div>
                       </div>
                     </div>
 
@@ -637,84 +814,6 @@ const Profile: React.FC = () => {
                 </div>
               )}
 
-              {activeTab === "wishlist" && (
-                <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-white">Wishlist</h2>
-                    <div className="text-gray-400 text-sm">
-                      {wishlist.length} {wishlist.length === 1 ? "item" : "items"}
-                    </div>
-                  </div>
-
-                  {wishlist.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Heart size={48} className="text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-xl font-bold text-gray-400 mb-2">Your wishlist is empty</h3>
-                      <p className="text-gray-500">Add items you love to keep track of them</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {wishlist.map((item, index) => (
-                        <div
-                          key={item.id}
-                          className="bg-zinc-800 rounded-xl p-6 hover:bg-zinc-700 transition-all duration-300 group"
-                          style={{
-                            animationDelay: `${index * 0.1}s`,
-                            animation: "bounceIn 0.6s ease-out forwards",
-                            opacity: 0,
-                          }}
-                        >
-                          <div className="relative mb-4">
-                            <img
-                              src={item.image || "/placeholder.svg"}
-                              alt={item.name}
-                              className="w-full h-32 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
-                            />
-                            <button
-                              onClick={() => removeFromWishlist(item.id)}
-                              className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-                            >
-                              <Heart size={16} fill="currentColor" />
-                            </button>
-                          </div>
-
-                          <h3 className="font-bold text-white mb-2 group-hover:text-gray-200 transition-colors">
-                            {item.name}
-                          </h3>
-                          <div className="flex items-center justify-between mb-4">
-                            <span className="text-2xl font-bold text-white">₹{item.price.toLocaleString()}</span>
-                            <span className={`text-sm font-medium ${item.inStock ? "text-green-400" : "text-red-400"}`}>
-                              {item.inStock ? "In Stock" : "Out of Stock"}
-                            </span>
-                          </div>
-
-                          <button
-                            onClick={() => (item.inStock ? addToCart(item) : notifyWhenAvailable(item))}
-                            className={`w-full py-3 rounded-lg font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
-                              item.inStock
-                                ? "bg-white text-black hover:bg-gray-200 hover:scale-105"
-                                : "bg-gray-600 text-gray-400 hover:bg-gray-500"
-                            }`}
-                          >
-                            {item.inStock ? (
-                              <>
-                                <ShoppingCart size={16} />
-                                Add to Cart
-                              </>
-                            ) : (
-                              <>
-                                <Bell size={16} />
-                                Notify When Available
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
               {activeTab === "settings" && (
                 <div className="space-y-8">
                   <h2 className="text-2xl font-bold text-white">Account Settings</h2>
@@ -763,6 +862,38 @@ const Profile: React.FC = () => {
                           className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none transition-colors hover:border-gray-400"
                         />
                       </div>
+                      <div>
+                        <label className="block text-gray-400 text-sm font-medium mb-2">Date of Birth</label>
+                        <input
+                          type="date"
+                          value={userProfile.dateOfBirth}
+                          onChange={(e) => handleProfileChange("dateOfBirth", e.target.value)}
+                          className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none transition-colors hover:border-gray-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-400 text-sm font-medium mb-2">Gender</label>
+                        <select
+                          value={userProfile.gender}
+                          onChange={(e) => handleProfileChange("gender", e.target.value)}
+                          className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none transition-colors hover:border-gray-400"
+                        >
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                          <option value="other">Other</option>
+                          <option value="prefer-not-to-say">Prefer not to say</option>
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-gray-400 text-sm font-medium mb-2">Bio</label>
+                        <textarea
+                          value={userProfile.bio}
+                          onChange={(e) => handleProfileChange("bio", e.target.value)}
+                          rows={3}
+                          className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none transition-colors hover:border-gray-400 resize-none"
+                          placeholder="Tell us about yourself..."
+                        />
+                      </div>
                     </div>
 
                     <div className="flex justify-end mt-6">
@@ -777,10 +908,123 @@ const Profile: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Addresses */}
+                  <div className="bg-zinc-800 rounded-xl p-6">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <MapPin size={20} />
+                        Addresses
+                      </h3>
+                      <button
+                        onClick={addAddress}
+                        className="bg-white text-black px-4 py-2 rounded-lg font-bold hover:bg-gray-200 transition-all duration-200 hover:scale-105 text-sm"
+                      >
+                        Add Address
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {addresses.map((address) => (
+                        <div key={address.id} className="bg-zinc-700 rounded-lg p-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-medium text-white">{address.name}</span>
+                                {address.isDefault && (
+                                  <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                                    Default
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-gray-400 text-sm">
+                                {address.street}, {address.city}, {address.state} {address.zipCode}
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              {!address.isDefault && (
+                                <button
+                                  onClick={() => setDefaultAddress(address.id)}
+                                  className="text-gray-400 hover:text-white text-xs"
+                                >
+                                  Set Default
+                                </button>
+                              )}
+                              <button
+                                onClick={() => removeAddress(address.id)}
+                                className="text-red-400 hover:text-red-300"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Payment Methods */}
+                  <div className="bg-zinc-800 rounded-xl p-6">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <CreditCard size={20} />
+                        Payment Methods
+                      </h3>
+                      <button
+                        onClick={addPaymentMethod}
+                        className="bg-white text-black px-4 py-2 rounded-lg font-bold hover:bg-gray-200 transition-all duration-200 hover:scale-105 text-sm"
+                      >
+                        Add Payment
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {paymentMethods.map((method) => (
+                        <div key={method.id} className="bg-zinc-700 rounded-lg p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-zinc-600 rounded-lg flex items-center justify-center">
+                                <CreditCard size={20} className="text-gray-400" />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-white">{method.name}</span>
+                                  {method.isDefault && (
+                                    <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                                      Default
+                                    </span>
+                                  )}
+                                </div>
+                                {method.expiryDate && (
+                                  <div className="text-gray-400 text-sm">Expires {method.expiryDate}</div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              {!method.isDefault && (
+                                <button
+                                  onClick={() => setDefaultPaymentMethod(method.id)}
+                                  className="text-gray-400 hover:text-white text-xs"
+                                >
+                                  Set Default
+                                </button>
+                              )}
+                              <button
+                                onClick={() => removePaymentMethod(method.id)}
+                                className="text-red-400 hover:text-red-300"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Security */}
                   <div className="bg-zinc-800 rounded-xl p-6">
                     <h3 className="text-lg font-bold mb-6 text-white flex items-center gap-2">
-                      <Settings size={20} />
+                      <Lock size={20} />
                       Security
                     </h3>
 
@@ -845,6 +1089,25 @@ const Profile: React.FC = () => {
                           </div>
                         </div>
                       </div>
+
+                      <div className="flex items-center justify-between p-4 bg-zinc-700 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <Shield className="text-blue-400" size={20} />
+                          <div>
+                            <div className="font-medium text-white">Two-Factor Authentication</div>
+                            <div className="text-sm text-gray-400">Add an extra layer of security</div>
+                          </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={appSettings.twoFactorAuth}
+                            onChange={() => handleAppSettingToggle("twoFactorAuth")}
+                            className="sr-only peer"
+                          />
+                          <div className="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-white"></div>
+                        </label>
+                      </div>
                     </div>
 
                     <div className="flex justify-end mt-6">
@@ -873,14 +1136,30 @@ const Profile: React.FC = () => {
                           newProducts: "New product releases",
                           specialOffers: "Special offers",
                           marketingEmails: "Marketing emails",
+                          smsNotifications: "SMS notifications",
+                          pushNotifications: "Push notifications",
                         }
+
+                        const icons = {
+                          orderUpdates: Package,
+                          newProducts: Bell,
+                          specialOffers: TrendingUp,
+                          marketingEmails: Mail,
+                          smsNotifications: Smartphone,
+                          pushNotifications: Bell,
+                        }
+
+                        const Icon = icons[key as keyof typeof icons]
 
                         return (
                           <div
                             key={key}
                             className="flex items-center justify-between p-4 bg-zinc-700 rounded-lg hover:bg-zinc-600 transition-colors"
                           >
-                            <span className="text-white font-medium">{labels[key as keyof typeof labels]}</span>
+                            <div className="flex items-center gap-3">
+                              <Icon className="text-gray-400" size={20} />
+                              <span className="text-white font-medium">{labels[key as keyof typeof labels]}</span>
+                            </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                               <input
                                 type="checkbox"
@@ -897,13 +1176,232 @@ const Profile: React.FC = () => {
 
                     <div className="flex justify-end mt-6">
                       <button
-                        onClick={handleSaveNotifications}
+                        onClick={() => handleSaveSettings("notification")}
                         disabled={saveStatus === "saving"}
                         className="bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-gray-200 transition-all duration-200 hover:scale-105 disabled:opacity-50 flex items-center gap-2"
                       >
                         <Save size={16} />
                         {saveStatus === "saving" ? "Saving..." : "Save Preferences"}
                       </button>
+                    </div>
+                  </div>
+
+                  {/* Privacy Settings */}
+                  <div className="bg-zinc-800 rounded-xl p-6">
+                    <h3 className="text-lg font-bold mb-6 text-white flex items-center gap-2">
+                      <Shield size={20} />
+                      Privacy & Data
+                    </h3>
+
+                    <div className="space-y-4">
+                      <div className="p-4 bg-zinc-700 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-white font-medium">Profile Visibility</span>
+                          <select
+                            value={privacySettings.profileVisibility}
+                            onChange={(e) =>
+                              setPrivacySettings((prev) => ({
+                                ...prev,
+                                profileVisibility: e.target.value as "public" | "private" | "friends",
+                              }))
+                            }
+                            className="bg-zinc-600 border border-zinc-500 rounded px-3 py-1 text-white text-sm"
+                          >
+                            <option value="public">Public</option>
+                            <option value="friends">Friends Only</option>
+                            <option value="private">Private</option>
+                          </select>
+                        </div>
+                        <div className="text-sm text-gray-400">Control who can see your profile information</div>
+                      </div>
+
+                      {Object.entries(privacySettings)
+                        .filter(([key]) => key !== "profileVisibility")
+                        .map(([key, value]) => {
+                          const labels = {
+                            showEmail: "Show email address",
+                            showPhone: "Show phone number",
+                            dataCollection: "Allow data collection for analytics",
+                            analytics: "Share usage analytics",
+                          }
+
+                          return (
+                            <div
+                              key={key}
+                              className="flex items-center justify-between p-4 bg-zinc-700 rounded-lg hover:bg-zinc-600 transition-colors"
+                            >
+                              <span className="text-white font-medium">{labels[key as keyof typeof labels]}</span>
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={value}
+                                  onChange={() => handlePrivacyToggle(key as keyof PrivacySettings)}
+                                  className="sr-only peer"
+                                />
+                                <div className="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-white"></div>
+                              </label>
+                            </div>
+                          )
+                        })}
+                    </div>
+
+                    <div className="flex justify-end mt-6">
+                      <button
+                        onClick={() => handleSaveSettings("privacy")}
+                        disabled={saveStatus === "saving"}
+                        className="bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-gray-200 transition-all duration-200 hover:scale-105 disabled:opacity-50 flex items-center gap-2"
+                      >
+                        <Save size={16} />
+                        {saveStatus === "saving" ? "Saving..." : "Save Privacy Settings"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* App Settings */}
+                  <div className="bg-zinc-800 rounded-xl p-6">
+                    <h3 className="text-lg font-bold mb-6 text-white flex items-center gap-2">
+                      <Settings size={20} />
+                      App Preferences
+                    </h3>
+
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-4 bg-zinc-700 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-white font-medium flex items-center gap-2">
+                              {appSettings.theme === "dark" ? <Moon size={16} /> : <Sun size={16} />}
+                              Theme
+                            </span>
+                            <select
+                              value={appSettings.theme}
+                              onChange={(e) =>
+                                setAppSettings((prev) => ({
+                                  ...prev,
+                                  theme: e.target.value as "light" | "dark" | "auto",
+                                }))
+                              }
+                              className="bg-zinc-600 border border-zinc-500 rounded px-3 py-1 text-white text-sm"
+                            >
+                              <option value="light">Light</option>
+                              <option value="dark">Dark</option>
+                              <option value="auto">Auto</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="p-4 bg-zinc-700 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-white font-medium flex items-center gap-2">
+                              <Globe size={16} />
+                              Language
+                            </span>
+                            <select
+                              value={appSettings.language}
+                              onChange={(e) => setAppSettings((prev) => ({ ...prev, language: e.target.value }))}
+                              className="bg-zinc-600 border border-zinc-500 rounded px-3 py-1 text-white text-sm"
+                            >
+                              <option value="en">English</option>
+                              <option value="hi">Hindi</option>
+                              <option value="es">Spanish</option>
+                              <option value="fr">French</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="p-4 bg-zinc-700 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-white font-medium">Currency</span>
+                            <select
+                              value={appSettings.currency}
+                              onChange={(e) => setAppSettings((prev) => ({ ...prev, currency: e.target.value }))}
+                              className="bg-zinc-600 border border-zinc-500 rounded px-3 py-1 text-white text-sm"
+                            >
+                              <option value="INR">INR (₹)</option>
+                              <option value="USD">USD ($)</option>
+                              <option value="EUR">EUR (€)</option>
+                              <option value="GBP">GBP (£)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="p-4 bg-zinc-700 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-white font-medium">Timezone</span>
+                            <select
+                              value={appSettings.timezone}
+                              onChange={(e) => setAppSettings((prev) => ({ ...prev, timezone: e.target.value }))}
+                              className="bg-zinc-600 border border-zinc-500 rounded px-3 py-1 text-white text-sm"
+                            >
+                              <option value="Asia/Kolkata">Asia/Kolkata</option>
+                              <option value="America/New_York">America/New_York</option>
+                              <option value="Europe/London">Europe/London</option>
+                              <option value="Asia/Tokyo">Asia/Tokyo</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-zinc-700 rounded-lg hover:bg-zinc-600 transition-colors">
+                        <span className="text-white font-medium">Auto-save preferences</span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={appSettings.autoSave}
+                            onChange={() => handleAppSettingToggle("autoSave")}
+                            className="sr-only peer"
+                          />
+                          <div className="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-white"></div>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end mt-6">
+                      <button
+                        onClick={() => handleSaveSettings("app")}
+                        disabled={saveStatus === "saving"}
+                        className="bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-gray-200 transition-all duration-200 hover:scale-105 disabled:opacity-50 flex items-center gap-2"
+                      >
+                        <Save size={16} />
+                        {saveStatus === "saving" ? "Saving..." : "Save App Settings"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Danger Zone */}
+                  <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-6">
+                    <h3 className="text-lg font-bold mb-6 text-red-400 flex items-center gap-2">
+                      <AlertCircle size={20} />
+                      Danger Zone
+                    </h3>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-red-900/30 rounded-lg">
+                        <div>
+                          <div className="font-medium text-white">Download Your Data</div>
+                          <div className="text-sm text-gray-400">Get a copy of all your account data</div>
+                        </div>
+                        <button
+                          onClick={downloadData}
+                          className="bg-gray-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-500 transition-colors flex items-center gap-2"
+                        >
+                          <Download size={16} />
+                          Download
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-red-900/30 rounded-lg">
+                        <div>
+                          <div className="font-medium text-white">Delete Account</div>
+                          <div className="text-sm text-gray-400">Permanently delete your account and all data</div>
+                        </div>
+                        <button
+                          onClick={deleteAccount}
+                          className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center gap-2"
+                        >
+                          <Trash2 size={16} />
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -932,12 +1430,6 @@ const Profile: React.FC = () => {
         @keyframes slideInRight {
           from { opacity: 0; transform: translateX(20px); }
           to { opacity: 1; transform: translateX(0); }
-        }
-        
-        @keyframes bounceIn {
-          0% { opacity: 0; transform: scale(0.3); }
-          50% { opacity: 1; transform: scale(1.1); }
-          100% { opacity: 1; transform: scale(1); }
         }
       `}</style>
     </div>

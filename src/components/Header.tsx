@@ -3,8 +3,15 @@ import { Sun, Search, User,Heart, ShoppingCart, X } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../pages/CartContext';
 
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  path: string;
+}
+
 // Mock product data - replace with your actual data source
-const mockProducts = [
+const mockProducts: Product[] = [
   { id: 1, name: "Classic Fight T-Shirt", category: "tshirt", path: "/products/1" },
   { id: 2, name: "Training Hoodie", category: "hoodie", path: "/products/2" },
   { id: 3, name: "Fight Shorts Pro", category: "shorts", path: "/products/3" },
@@ -18,7 +25,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
   const { cartCount } = useCart();
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -198,7 +205,7 @@ const Header = () => {
           </Link>
 
           <Link 
-            to="/account" 
+            to="/profile" 
             className="text-white hover:text-red-500 transition-colors"
             aria-label="Account"
           >

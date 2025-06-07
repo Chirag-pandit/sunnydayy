@@ -2,7 +2,6 @@
 
 // import React from "react";
 import { Carousel, Card } from "./ui/apple-cards-carousel";
-import { Image } from "lucide-react";
 // import logo from './logo-png.png'====>add our app logo here 
 
 const ReviewContent = ({ review, rating, name, title }: { review: string; rating: number; name: string; title: string }) => {
