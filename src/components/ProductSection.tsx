@@ -60,26 +60,30 @@ export default function ProductSection() {
     },
     {
       id: 6,
-      name: "GYM ESSENTIALS",
-      description: "Performance gear for serious athletes",
-      frontImage: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop",
-      backImage: "https://images.unsplash.com/photo-1571019614243-c4cd3a119107?w=400&h=400&fit=crop",
+      name: "CAGE KINGS",
+      description: "Born for the Octagon. Built for dominance.",
+      frontImage: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-04-04_11-40-14-436.jpg-MqAFHfPgb2NHR8iTpRFQK3F7kVCMLR.jpeg",
+      backImage: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-04-04_11-41-50-263.jpg-uXtZ2OHaSabKvzzbfnj2VRrmf6X22W.jpeg",
       category: "NEW",
     },
     {
       id: 7,
-      name: "COMBAT CLASSICS",
-      description: "Timeless designs for modern warriors",
-      frontImage: "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=400&h=400&fit=crop",
-      backImage: "https://images.unsplash.com/photo-1600185365406-4a33e2bf3d6f?w=400&h=400&fit=crop",
+      name: "SIAM STRIKES",
+      description: "Ain’t nobody’s fool.",
+      frontImage:
+        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_23-59-58-695.jpg-1Pn8vxOXlseWmVGmZyWpzHXAE3Qsna.jpeg",
+      backImage:
+        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_17-08-17-546.jpg-DQ7u6zj07SAm1Pvz1uhkWqkWgwzFYw.jpeg",
       category: "LEGEND",
     },
     {
       id: 8,
-      name: "LIMITED EDITION",
-      description: "Exclusive drops you won't find elsewhere",
-      frontImage: "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=400&h=400&fit=crop",
-      backImage: "https://images.unsplash.com/photo-1555529669-226e9dd13e0a?w=400&h=400&fit=crop",
+      name: "MIND OVER MUSCLE",
+      description: "Brains hit harder.",
+      frontImage:
+        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_23-41-15-690.jpg-DvuCVKwwDB0rxJAJTpTWx792bQOJdw.jpeg",
+      backImage:
+        "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_23-42-04-925.jpg-LUjyNfxDlYsIDAuUHHmE0QlNRLRxxa.jpeg",
       category: "RARE",
     },
   ]

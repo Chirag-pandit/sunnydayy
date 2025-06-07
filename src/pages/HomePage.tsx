@@ -10,34 +10,11 @@ import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 import ProductSection from '../components/ProductSection';
 
-import MaskContainer from '@/components/ui/svg-mask-effect';
-
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
   transition: { duration: 0.6 }
 };
-
-const testimonials = [
-  {
-    quote: "This product really helped improve my workflow!",
-    name: "Kanak Sharma",
-    designation: "Frontend Developer",
-    src: "https://images.unsplash.com/photo-1642394079532-8ce715339e6e?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", // Replace with your image URL
-  },
-  {
-    quote: "Amazing experience and great support team.",
-    name: "Rahul Verma",
-    designation: "UI/UX Designer",
-    src: "https://images.unsplash.com/photo-1630196215412-b704bb47bea4?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  },
-  {
-    quote: "Highly recommend this to all developers!",
-    name: "Aisha Khan",
-    designation: "Software Engineer",
-    src: "https://images.unsplash.com/photo-1602094880690-069c9083f406?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  },
-];
 
 const HomePage: React.FC = () => {
   return (

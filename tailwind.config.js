@@ -77,8 +77,8 @@ export default {
         },
       },
       backgroundImage: {
-        "hero-pattern": `linear-gradient(to bottom, rgba(17, 17, 17, 0.8), rgba(17, 17, 17, 0.9)), url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_24-08-15_11-16-12-417-3T3fYz6jkMMllMME0EgRtGmMsDdpzC.png')`,
-        texture: "url('https://images.pexels.com/photos/5089151/pexels-photo-5089151.jpeg')",
+        "hero-pattern": `linear-gradient(to bottom, rgba(17, 17, 17, 0.8), rgba(17, 17, 17, 0.9)), url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/T1a.jpg-oj8GWx5yaUssyIKTcloF6jXnaoqvfd.jpeg')`,
+        texture: "url('https://images.unsplash.com/photo-1714583174225-0e…xMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
       },
     },
   },
