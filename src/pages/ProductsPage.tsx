@@ -177,9 +177,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view }) => {
 
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center">
-            <span className="font-bold text-red-500">${product.price.toFixed(2)}</span>
+            <span className="font-bold text-red-500">₹{product.price.toFixed(2)}</span>
             {product.originalPrice && (
-              <span className="text-gray-400 line-through ml-2">${product.originalPrice.toFixed(2)}</span>
+              <span className="text-gray-400 line-through ml-2">₹{product.originalPrice.toFixed(2)}</span>
             )}
           </div>
           <div className="flex items-center">
@@ -328,7 +328,7 @@ const ProductsPage: React.FC = () => {
 
     // Filter by price
     const activePriceFilters = Object.entries(priceFilters)
-      .filter(([_, value]) => value)
+      .filter(([, value]) => value)
       .map(([key]) => key);
 
     if (activePriceFilters.length > 0) {
@@ -528,10 +528,10 @@ const ProductsPage: React.FC = () => {
                 <h3 className="text-xl font-bold mb-4 text-gray-100">Price Range</h3>
                 <div className="space-y-2">
                   {[
-                    { id: "under50", label: "Under $50" },
-                    { id: "between50And100", label: "$50 - $100" },
-                    { id: "between100And150", label: "$100 - $150" },
-                    { id: "over150", label: "Over $150" },
+                    { id: "under50", label: "Under ₹50" },
+                    { id: "between50And100", label: "₹50 - ₹100" },
+                    { id: "between100And150", label: "₹100 - ₹150" },
+                    { id: "over150", label: "Over ₹150" },
                   ].map(({ id, label }) => (
                     <div key={id} className="flex items-center">
                       <input
@@ -594,10 +594,10 @@ const ProductsPage: React.FC = () => {
                 <h3 className="text-xl font-bold mb-4 text-gray-100">Price Range</h3>
                 <div className="space-y-2">
                   {[
-                    { id: "under50", label: "Under $50" },
-                    { id: "between50And100", label: "$50 - $100" },
-                    { id: "between100And150", label: "$100 - $150" },
-                    { id: "over150", label: "Over $150" },
+                    { id: "under50", label: "Under ₹50" },
+                    { id: "between50And100", label: "₹50 - ₹100" },
+                    { id: "between100And150", label: "₹100 - ₹150" },
+                    { id: "over150", label: "Over ₹150" },
                   ].map(({ id, label }) => (
                     <div key={id} className="flex items-center">
                       <input

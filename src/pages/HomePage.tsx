@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Award, ShieldCheck, Truck, Instagram } from 'lucide-react';
-import { Swiper, SwiperSlide } from 'swiper/react';
+import { Swiper } from 'swiper/react';
 import { Autoplay, Pagination, Navigation } from 'swiper/modules';
 import 'swiper/css';
 import { AppleCardsCarouselDemo } from '@/components/AppleCardsCarouseDemo';
@@ -329,93 +329,7 @@ const HomePage: React.FC = () => {
               },
             }}
           >
-            {/* Testimonial 1 */}
-            <SwiperSlide>
-              <div className="bg-secondary p-8 rounded-lg h-full">
-                <div className="flex items-center mb-4">
-                  <div className="w-16 h-16 bg-primary rounded-full mr-4">
-                    <img 
-                      src="https://images.pexels.com/photos/6740056/pexels-photo-6740056.jpeg" 
-                      alt="Fighter" 
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-heading font-bold text-lg">Alex "The Destroyer" Thompson</h4>
-                    <p className="text-gray-400">UFC Fighter</p>
-                  </div>
-                </div>
-                <p className="text-gray-300 italic">
-                  "SunnyDay gloves have been a game-changer for my training. The quality and protection they provide is unmatched. I won't use anything else."
-                </p>
-              </div>
-            </SwiperSlide>
-
-            {/* Testimonial 2 */}
-            <SwiperSlide>
-              <div className="bg-secondary p-8 rounded-lg h-full">
-                <div className="flex items-center mb-4">
-                  <div className="w-16 h-16 bg-primary rounded-full mr-4">
-                    <img 
-                      src="https://images.pexels.com/photos/7991579/pexels-photo-7991579.jpeg" 
-                      alt="Fighter" 
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-heading font-bold text-lg">Sarah "Knockout" Johnson</h4>
-                    <p className="text-gray-400">Bellator Champion</p>
-                  </div>
-                </div>
-                <p className="text-gray-300 italic">
-                  "As a professional fighter, I need gear I can trust. SunnyDay rashguards provide the perfect blend of protection and comfort during my most intense training sessions."
-                </p>
-              </div>
-            </SwiperSlide>
-
-            {/* Testimonial 3 */}
-            <SwiperSlide>
-              <div className="bg-secondary p-8 rounded-lg h-full">
-                <div className="flex items-center mb-4">
-                  <div className="w-16 h-16 bg-primary rounded-full mr-4">
-                    <img 
-                      src="https://images.pexels.com/photos/4754146/pexels-photo-4754146.jpeg" 
-                      alt="Fighter" 
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-heading font-bold text-lg">Mike "The Beast" Rodriguez</h4>
-                    <p className="text-gray-400">MMA Coach</p>
-                  </div>
-                </div>
-                <p className="text-gray-300 italic">
-                  "I recommend SunnyDay gear to all my fighters. The durability is impressive, and they've thought of everything a fighter needs. Top quality products."
-                </p>
-              </div>
-            </SwiperSlide>
-
-            {/* Testimonial 4 */}
-            <SwiperSlide>
-              <div className="bg-secondary p-8 rounded-lg h-full">
-                <div className="flex items-center mb-4">
-                  <div className="w-16 h-16 bg-primary rounded-full mr-4">
-                    <img 
-                      src="https://images.pexels.com/photos/7045664/pexels-photo-7045664.jpeg" 
-                      alt="Fighter" 
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-heading font-bold text-lg">Elena "Swift" Martinez</h4>
-                    <p className="text-gray-400">BJJ Black Belt</p>
-                  </div>
-                </div>
-                <p className="text-gray-300 italic">
-                  "The SunnyDay shorts give me the perfect range of motion for grappling. They're comfortable, durable, and look great. Worth every penny."
-                </p>
-              </div>
-            </SwiperSlide>
+          
           </Swiper>
         </div>
       </section>

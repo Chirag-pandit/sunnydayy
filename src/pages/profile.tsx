@@ -292,7 +292,7 @@ const Profile: React.FC = () => {
       setSaveStatus("saved")
       setIsEditing(false)
       setTimeout(() => setSaveStatus("idle"), 3000)
-    } catch (_) {
+    } catch {
       setSaveStatus("error")
       setTimeout(() => setSaveStatus("idle"), 3000)
     }
@@ -317,7 +317,7 @@ const Profile: React.FC = () => {
       setPasswords({ current: "", new: "", confirm: "" })
       setSaveStatus("saved")
       setTimeout(() => setSaveStatus("idle"), 3000)
-    } catch (_) {
+    } catch {
       setSaveStatus("error")
       setTimeout(() => setSaveStatus("idle"), 3000)
     }
@@ -331,7 +331,7 @@ const Profile: React.FC = () => {
       console.log(`${type} settings updated`)
       setSaveStatus("saved")
       setTimeout(() => setSaveStatus("idle"), 3000)
-    } catch (_) {
+    } catch {
       setSaveStatus("error")
       setTimeout(() => setSaveStatus("idle"), 3000)
     }

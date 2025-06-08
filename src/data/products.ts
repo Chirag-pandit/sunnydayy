@@ -137,7 +137,6 @@ export const contactInfo = {
   address: '123 MMA Street, Fight City, India'
 };
 
-
 // Categories data
 export const categories = [
   { id: 'all', name: 'All Products', count: allProducts.length },
