@@ -47,7 +47,11 @@ const allProducts: Product[] = [
     inStock: true,
     isNew: true,
     description: "Premium cotton blend t-shirt perfect for training and casual wear.",
-    images: ["/placeholder.svg", "/placeholder.svg"],
+    // images: ["https://media.istockphoto.com/id/1252207646/photo/man-kick-boxer-training-alone-in-gym.jpg?s=2048x2048&w=is&k=20&c=cCnifDEPoR0eVx6ucdGNbvTgdT_g4s3SfgXaVm2KLiA=", "https://media.istockphoto.com/id/1252207646/photo/man-kick-boxer-training-alone-in-gym.jpg?s=2048x2048&w=is&k=20&c=cCnifDEPoR0eVx6ucdGNbvTgdT_g4s3SfgXaVm2KLiA="],
+    images: [
+          "https://images.unsplash.com/photo-1681203888755-bd61fe3558eb?q=80&w=1888&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", // Replace with your image URL
+          "https://images.unsplash.com/photo-1681203888755-bd61fe3558eb?q=80&w=1888&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"   // Replace with your image URL
+        ],
     colors: ["Black", "White", "Red"],
     sizes: ["S", "M", "L", "XL", "XXL"],
   },

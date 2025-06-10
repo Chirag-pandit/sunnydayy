@@ -21,7 +21,7 @@ interface Product {
   sizes: string[];
 }
 
-// Mock data
+// Mock data - UPDATE THESE IMAGE LINKS WITH YOUR ACTUAL PRODUCT IMAGES
 const allProducts: Product[] = [
   {
     id: 1,
@@ -34,7 +34,11 @@ const allProducts: Product[] = [
     inStock: true,
     isNew: true,
     description: "Premium cotton blend t-shirt perfect for training and casual wear.",
-    images: ["/placeholder.svg", "/placeholder.svg"],
+    images: [
+      "https://example.com/images/tshirt-black-front.jpg", // Replace with your image URL
+      "https://example.com/images/tshirt-black-back.jpg",  // Replace with your image URL
+      "https://example.com/images/tshirt-black-side.jpg"   // Replace with your image URL
+    ],
     colors: ["Black", "White", "Red"],
     sizes: ["S", "M", "L", "XL", "XXL"],
   },
@@ -48,7 +52,10 @@ const allProducts: Product[] = [
     inStock: true,
     isNew: false,
     description: "Comfortable hoodie with moisture-wicking technology.",
-    images: ["/placeholder.svg", "/placeholder.svg"],
+    images: [
+      "https://images.unsplash.com/photo-1681203888755-bd61fe3558eb?q=80&w=1888&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", // Replace with your image URL
+      "https://images.unsplash.com/photo-1681203888755-bd61fe3558eb?q=80&w=1888&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"   // Replace with your image URL
+    ],
     colors: ["Black", "Gray", "Navy"],
     sizes: ["S", "M", "L", "XL"],
   },
@@ -62,7 +69,10 @@ const allProducts: Product[] = [
     inStock: true,
     isNew: false,
     description: "Professional grade fight shorts with reinforced stitching.",
-    images: ["/placeholder.svg", "/placeholder.svg"],
+    images: [
+      "https://example.com/images/shorts-black-front.jpg", // Replace with your image URL
+      "https://example.com/images/shorts-black-side.jpg"    // Replace with your image URL
+    ],
     colors: ["Black", "Blue", "Red"],
     sizes: ["S", "M", "L", "XL"],
   },
@@ -76,7 +86,10 @@ const allProducts: Product[] = [
     inStock: true,
     isNew: true,
     description: "Premium quality hoodie with advanced fabric technology.",
-    images: ["/placeholder.svg", "/placeholder.svg"],
+    images: [
+      "https://example.com/images/premium-hoodie-front.jpg", // Replace with your image URL
+      "https://example.com/images/premium-hoodie-back.jpg"   // Replace with your image URL
+    ],
     colors: ["Black", "White"],
     sizes: ["M", "L", "XL"],
   },
@@ -90,7 +103,10 @@ const allProducts: Product[] = [
     inStock: true,
     isNew: false,
     description: "Durable t-shirt designed for intense training sessions.",
-    images: ["/placeholder.svg", "/placeholder.svg"],
+    images: [
+      "https://example.com/images/combat-tshirt-front.jpg", // Replace with your image URL
+      "https://example.com/images/combat-tshirt-back.jpg"    // Replace with your image URL
+    ],
     colors: ["Black", "Red", "Blue"],
     sizes: ["S", "M", "L", "XL"],
   },
@@ -251,14 +267,14 @@ const ProductDetailPage: React.FC = () => {
               {product.images.map((img, index) => (
                 <button
                   key={index}
-                  className={`flex-shrink-0 w-24 h-24 rounded-md overflow-hidden border-2 ₹{
+                  className={`flex-shrink-0 w-24 h-24 rounded-md overflow-hidden border-2 ${
                     mainImage === img ? "border-red-500" : "border-transparent"
                   }`}
                   onClick={() => setMainImage(img)}
                 >
                   <img
                     src={img || "/placeholder.svg"}
-                    alt={`₹{product.name} view ₹{index + 1}`}
+                    alt={`${product.name} view ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
                 </button>
@@ -334,7 +350,7 @@ const ProductDetailPage: React.FC = () => {
                 {product.colors.map((color) => (
                   <button
                     key={color}
-                    className={`px-4 py-2 border rounded-md ₹{
+                    className={`px-4 py-2 border rounded-md ${
                       selectedColor === color
                         ? "border-red-500 text-red-500"
                         : "border-gray-600 text-gray-300 hover:border-gray-400"
@@ -353,7 +369,7 @@ const ProductDetailPage: React.FC = () => {
                 <h3 className="text-gray-100 font-medium">Size:</h3>
                 <button className="text-red-500 text-sm flex items-center" onClick={toggleSizeChart}>
                   Size Chart
-                  <ChevronDown size={16} className={`ml-1 transition-transform ₹{showSizeChart ? "rotate-180" : ""}`} />
+                  <ChevronDown size={16} className={`ml-1 transition-transform ${showSizeChart ? "rotate-180" : ""}`} />
                 </button>
               </div>
 
@@ -385,7 +401,7 @@ const ProductDetailPage: React.FC = () => {
                 {product.sizes.map((size) => (
                   <button
                     key={size}
-                    className={`px-4 py-2 border rounded-md ₹{
+                    className={`px-4 py-2 border rounded-md ${
                       selectedSize === size
                         ? "border-red-500 text-red-500"
                         : "border-gray-600 text-gray-300 hover:border-gray-400"
@@ -421,7 +437,7 @@ const ProductDetailPage: React.FC = () => {
 
               <div className="w-full sm:w-2/3">
                 <button
-                  className={`w-full flex items-center justify-center gap-2 py-3 px-6 rounded font-medium mt-7 ₹{
+                  className={`w-full flex items-center justify-center gap-2 py-3 px-6 rounded font-medium mt-7 ${
                     product.stock > 0 && product.inStock !== false
                       ? isInCart
                         ? "bg-green-600 text-white"
@@ -479,7 +495,7 @@ const ProductDetailPage: React.FC = () => {
         <div className="flex justify-between border-t border-b border-gray-700 py-4 mb-12">
           {prevProduct ? (
             <Link
-              to={`/products/₹{prevProduct.id}`}
+              to={`/products/${prevProduct.id}`}
               className="flex items-center text-gray-300 hover:text-red-500 transition-colors"
             >
               <ChevronLeft size={20} className="mr-2" />
@@ -492,7 +508,7 @@ const ProductDetailPage: React.FC = () => {
 
           {nextProduct && (
             <Link
-              to={`/products/₹{nextProduct.id}`}
+              to={`/products/${nextProduct.id}`}
               className="flex items-center text-gray-300 hover:text-red-500 transition-colors"
             >
               <span className="font-medium mr-1">{nextProduct.name}</span>
@@ -509,7 +525,7 @@ const ProductDetailPage: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map((relatedProduct) => (
                 <div key={relatedProduct.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-md">
-                  <Link to={`/products/₹{relatedProduct.id}`} className="block relative group overflow-hidden">
+                  <Link to={`/products/${relatedProduct.id}`} className="block relative group overflow-hidden">
                     <img
                       src={relatedProduct.images[0] || "/placeholder.svg"}
                       alt={relatedProduct.name}
@@ -526,7 +542,7 @@ const ProductDetailPage: React.FC = () => {
 
                   <div className="p-4">
                     <div className="flex justify-between items-start mb-2">
-                      <Link to={`/products/₹{relatedProduct.id}`} className="block">
+                      <Link to={`/products/${relatedProduct.id}`} className="block">
                         <h3 className="font-medium text-gray-100 hover:text-red-500 transition-colors">
                           {relatedProduct.name}
                         </h3>
