@@ -47,55 +47,11 @@ const allProducts: Product[] = [
     inStock: true,
     isNew: true,
     description: "Premium cotton blend t-shirt perfect for training and casual wear.",
-    // images: ["https://media.istockphoto.com/id/1252207646/photo/man-kick-boxer-training-alone-in-gym.jpg?s=2048x2048&w=is&k=20&c=cCnifDEPoR0eVx6ucdGNbvTgdT_g4s3SfgXaVm2KLiA=", "https://media.istockphoto.com/id/1252207646/photo/man-kick-boxer-training-alone-in-gym.jpg?s=2048x2048&w=is&k=20&c=cCnifDEPoR0eVx6ucdGNbvTgdT_g4s3SfgXaVm2KLiA="],
     images: [
-          "https://images.unsplash.com/photo-1681203888755-bd61fe3558eb?q=80&w=1888&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", // Replace with your image URL
-          "https://images.unsplash.com/photo-1681203888755-bd61fe3558eb?q=80&w=1888&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"   // Replace with your image URL
-        ],
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_17-11-50-568.jpg-0FUnC5c9RAjGh15NrvAbYs5vsElpfM.jpeg"
+    ],
     colors: ["Black", "White", "Red"],
     sizes: ["S", "M", "L", "XL", "XXL"],
-  },
-  {
-    id: 2,
-    name: "Training Hoodie",
-    category: "hoodie",
-    price: 79.99,
-    rating: 4.8,
-    stock: 8,
-    inStock: true,
-    isNew: false,
-    description: "Comfortable hoodie with moisture-wicking technology.",
-    images: ["/placeholder.svg", "/placeholder.svg"],
-    colors: ["Black", "Gray", "Navy"],
-    sizes: ["S", "M", "L", "XL"],
-  },
-  {
-    id: 3,
-    name: "Fight Shorts Pro",
-    category: "shorts",
-    price: 49.99,
-    rating: 4.7,
-    stock: 12,
-    inStock: true,
-    isNew: false,
-    description: "Professional grade fight shorts with reinforced stitching.",
-    images: ["/placeholder.svg", "/placeholder.svg"],
-    colors: ["Black", "Blue", "Red"],
-    sizes: ["S", "M", "L", "XL"],
-  },
-  {
-    id: 4,
-    name: "Premium Hoodie",
-    category: "hoodie",
-    price: 89.99,
-    rating: 4.6,
-    stock: 5,
-    inStock: true,
-    isNew: true,
-    description: "Premium quality hoodie with advanced fabric technology.",
-    images: ["/placeholder.svg", "/placeholder.svg"],
-    colors: ["Black", "White"],
-    sizes: ["M", "L", "XL"],
   },
   {
     id: 5,
@@ -107,10 +63,420 @@ const allProducts: Product[] = [
     inStock: true,
     isNew: false,
     description: "Durable t-shirt designed for intense training sessions.",
-    images: ["/placeholder.svg", "/placeholder.svg"],
+    images: ["https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_23-41-15-690.jpg-rLcWp2KS6SFQWSqzu3UPZPJRp34k32.jpeg"],
     colors: ["Black", "Red", "Blue"],
     sizes: ["S", "M", "L", "XL"],
   },
+  {
+    id: 6,
+    name: "Falling Down Artistic T-Shirt",
+    category: "tshirt",
+    price: 34.99,
+    originalPrice: 44.99,
+    rating: 4.7,
+    stock: 20,
+    inStock: true,
+    isNew: true,
+    description: "Artistic design featuring classical renaissance-inspired artwork with modern streetwear aesthetics.",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/falling-5fyuP3YQiIFxqXTyT2HaKK5gTiNTC0.webp",
+      
+    ],
+    colors: ["White", "Black", "Gray"],
+    sizes: ["S", "M", "L", "XL", "XXL"],
+  },
+  {
+    id: 7,
+    name: "Ultra Instinct Goku T-Shirt",
+    category: "tshirt",
+    price: 32.99,
+    rating: 4.8,
+    stock: 25,
+    inStock: true,
+    isNew: true,
+    description: "Epic Dragon Ball Z inspired design featuring Goku in Ultra Instinct form with dynamic artwork.",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/goku-Dptsqo8pfS7rFuGZTnUZquIkn6G0T8.webp",
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/goku-Dptsqo8pfS7rFuGZTnUZquIkn6G0T8.webp",
+    ],
+    colors: ["Black", "Navy", "Dark Gray"],
+    sizes: ["S", "M", "L", "XL", "XXL"],
+  },
+  {
+    id: 8,
+    name: "Insomnia Streetwear T-Shirt",
+    category: "tshirt",
+    price: 36.99,
+    rating: 4.6,
+    stock: 18,
+    inStock: true,
+    isNew: true,
+    description: "Bold streetwear design with masked figure and striking red typography for the urban warrior.",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/insomia-WnfxV33Dtonn4oAAn60p26ixsqlvrK.webp",
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/insomia-WnfxV33Dtonn4oAAn60p26ixsqlvrK.webp",
+    ],
+    colors: ["Black", "Charcoal"],
+    sizes: ["S", "M", "L", "XL", "XXL"],
+  },
+  {
+    id: 9,
+    name: "Brazilian Jiu-Jitsu Flag T-Shirt",
+    category: "tshirt",
+    price: 31.99,
+    rating: 4.5,
+    stock: 22,
+    inStock: true,
+    isNew: false,
+    description: "Show your BJJ pride with this Brazilian flag-inspired design perfect for training and casual wear.",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_24-08-09_20-23-50-344.jpg-kW7kgYBLLZtlWJlIIsKP3PgyS0OKN0.jpeg",
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_24-08-09_20-23-50-344.jpg-kW7kgYBLLZtlWJlIIsKP3PgyS0OKN0.jpeg",
+    ],
+    colors: ["Black", "Navy"],
+    sizes: ["S", "M", "L", "XL", "XXL"],
+  },
+  {
+    id: 10,
+    name: "Fight Hard Boxing T-Shirt",
+    category: "tshirt",
+    price: 33.99,
+    rating: 4.7,
+    stock: 16,
+    inStock: true,
+    isNew: false,
+    description: "Motivational boxing design with detailed glove artwork and inspiring message for fighters.",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-05-01_10-00-19-353.jpg-MprUP65nK772t1t3HDu0RxOanxw3ia.jpeg",
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-05-01_10-00-19-353.jpg-MprUP65nK772t1t3HDu0RxOanxw3ia.jpeg",
+    ],
+    colors: ["Black", "Dark Gray"],
+    sizes: ["S", "M", "L", "XL", "XXL"],
+  },
+  {
+    id: 11,
+    name: "UFC Fighter Silhouette T-Shirt",
+    category: "tshirt",
+    price: 35.99,
+    rating: 4.6,
+    stock: 14,
+    inStock: true,
+    isNew: false,
+    description: "Iconic UFC fighter silhouette design capturing the intensity and power of mixed martial arts.",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-04-10_23-21-49-542.jpg-vCWZE0f6CCVXjrb6zUjyGWTOD7d7PD.jpeg",
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-04-10_23-21-49-542.jpg-vCWZE0f6CCVXjrb6zUjyGWTOD7d7PD.jpeg",
+    ],
+    colors: ["Black", "White"],
+    sizes: ["S", "M", "L", "XL", "XXL"],
+  },
+  {
+    id: 3,
+    name: "Art & Nobility",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_23-40-22-118.jpg-plaVeR8SPC6FC1EpeP3sLLQMpdvoJW.jpeg"
+    ],
+    price: 32.99,
+    category: "tshirt",
+    rating: 4.5,
+    stock: 15,
+    inStock: true,
+    isNew: true,
+    description: "Artistic design featuring classical renaissance-inspired artwork.",
+    colors: ["Black", "White"],
+    sizes: ["S", "M", "L", "XL", "XXL"]
+  },
+  {
+    id: 4,
+    name: "Ornate Skull",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Skull.jpg-iwI6EzGKoQbn8R1iu9jV7ZMUqfPjBG.jpeg"
+    ],
+    price: 36.99,
+    category: "tshirt",
+    rating: 4.6,
+    stock: 12,
+    inStock: true,
+    isNew: false,
+    description: "Bold skull design with ornate details.",
+    colors: ["Black", "Gray"],
+    sizes: ["S", "M", "L", "XL", "XXL"]
+  },
+  {
+    id: 5,
+    name: "MMA Red",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/T3c.jpg-AbM8E8w5WC4RoYa7duKINBXTXg9lyk.jpeg"
+    ],
+    price: 31.99,
+    category: "tshirt",
+    rating: 4.7,
+    stock: 18,
+    inStock: true,
+    isNew: true,
+    description: "Dynamic MMA-inspired design in striking red.",
+    colors: ["Red", "Black"],
+    sizes: ["S", "M", "L", "XL", "XXL"]
+  },
+  {
+    id: 6,
+    name: "Paint Stripes",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/T4b.jpg-PnuWOr269QBrh13iBKHbIilRdoenCz.jpeg"
+    ],
+    price: 33.99,
+    category: "tshirt",
+    rating: 4.4,
+    stock: 20,
+    inStock: true,
+    isNew: false,
+    description: "Abstract paint stripe design for the modern artist.",
+    colors: ["White", "Black"],
+    sizes: ["S", "M", "L", "XL", "XXL"]
+  },
+  {
+    id: 7,
+    name: "Travis Scott",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/travis-vcvW3YVsQJxKvOSfD6Kfd9yPUj0eMk.webp"
+    ],
+    price: 39.99,
+    category: "tshirt",
+    rating: 4.8,
+    stock: 10,
+    inStock: true,
+    isNew: true,
+    description: "Travis Scott inspired design with unique aesthetics.",
+    colors: ["Black", "White"],
+    sizes: ["S", "M", "L", "XL", "XXL"]
+  },
+   // ORIGINAL COMBAT T-SHIRT (cleaned up duplicates)
+   {
+    id: 18,
+    name: "Dark Block Insomnia",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/insomia_hoddie-ebFCVkMILypdCuUhRhVqJXOBUhCl7S.webp"
+    ],
+    price: 65.99,
+    category: "hoodie",
+    rating: 4.7,
+    stock: 15,
+    inStock: true,
+    isNew: true,
+    description: "Dark block design hoodie with insomnia theme.",
+    colors: ["Black", "Gray"],
+    sizes: ["S", "M", "L", "XL"]
+  },
+  {
+    id: 19,
+    name: "Sanji Flame Circle",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/sanji-JW9l5yxbdM8RceKezOlhB7WSJx8Y1p.webp"
+    ],
+    price: 69.99,
+    category: "hoodie",
+    rating: 4.8,
+    stock: 12,
+    inStock: true,
+    isNew: true,
+    description: "One Piece inspired Sanji flame circle design hoodie.",
+    colors: ["Black", "Red"],
+    sizes: ["S", "M", "L", "XL"]
+  },
+  {
+    id: 20,
+    name: "Demon Mask Sukuna",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/sukunja-lGPN2neITGBpZmm6rOqvw6bnAUwWtF.webp"
+    ],
+    price: 72.99,
+    category: "hoodie",
+    rating: 4.9,
+    stock: 10,
+    inStock: true,
+    isNew: true,
+    description: "Jujutsu Kaisen inspired Sukuna demon mask hoodie.",
+    colors: ["Black", "Red"],
+    sizes: ["S", "M", "L", "XL"]
+  },
+  {
+    id: 21,
+    name: "Zenitsu Thunder",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/zenitus-sF1vyLtnZlEv2xjFh1fPpMe3J55rbZ.webp"
+    ],
+    price: 68.99,
+    category: "hoodie",
+    rating: 4.6,
+    stock: 14,
+    inStock: true,
+    isNew: true,
+    description: "Demon Slayer inspired Zenitsu thunder design hoodie.",
+    colors: ["Black", "Yellow"],
+    sizes: ["S", "M", "L", "XL"]
+  },
+  //shorts...........
+  {
+    id: 8,
+    name: "SYD MMA Pro",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-04-04_11-40-14-436.jpg-aikU6xUkJKcLhGdrqXIdL7yudg2VzQ.jpeg"
+    ],
+    price: 45.99,
+    category: "shorts",
+    rating: 4.5,
+    stock: 15,
+    inStock: true,
+    isNew: true,
+    description: "Professional MMA shorts with premium design.",
+    colors: ["Black", "Red"],
+    sizes: ["S", "M", "L", "XL"]
+  },
+  {
+    id: 9,
+    name: "Fire Fighter",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-04-04_11-41-50-263.jpg-RZpJo8OKcOv0pskl6xApApFB48Uoy0.jpeg"
+    ],
+    price: 42.99,
+    category: "shorts",
+    rating: 4.6,
+    stock: 12,
+    inStock: true,
+    isNew: false,
+    description: "Bold fire-inspired design shorts.",
+    colors: ["Black", "Orange"],
+    sizes: ["S", "M", "L", "XL"]
+  },
+  {
+    id: 10,
+    name: "Tiger Crown",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-05-31_14-52-53-537.jpg-vbA9bCRImUzb8n4ojh0dAIW7e0a6nH.jpeg"
+    ],
+    price: 38.99,
+    category: "shorts",
+    rating: 4.7,
+    stock: 18,
+    inStock: true,
+    isNew: true,
+    description: "Royal tiger design shorts with crown motif.",
+    colors: ["Black", "Gold"],
+    sizes: ["S", "M", "L", "XL"]
+  },
+  {
+    id: 11,
+    name: "Crown Claw",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-05-31_14-53-59-080.jpg-bxlXb1IIubAiuZL2kvHMpRH1qmnuc0.jpeg"
+    ],
+    price: 40.99,
+    category: "shorts",
+    rating: 4.5,
+    stock: 20,
+    inStock: true,
+    isNew: false,
+    description: "Fierce crown and claw design shorts.",
+    colors: ["Black", "Silver"],
+    sizes: ["S", "M", "L", "XL"]
+  },
+  {
+    id: 12,
+    name: "Royal Crown",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-05-31_17-01-25-544.jpg-xL6QXE5q6S4jGer6ATjfvPa0Kwbbcw.jpeg"
+    ],
+    price: 35.99,
+    category: "shorts",
+    rating: 4.4,
+    stock: 15,
+    inStock: true,
+    isNew: true,
+    description: "Elegant royal crown design shorts.",
+    colors: ["Black", "Purple"],
+    sizes: ["S", "M", "L", "XL"]
+  },
+  {
+    id: 13,
+    name: "Tiger Roar",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_16-22-07-555.jpg-YZLcfGsV5qoRsEVTeXGgSA6vLYsJl9.jpeg"
+    ],
+    price: 44.99,
+    category: "shorts",
+    rating: 4.8,
+    stock: 10,
+    inStock: true,
+    isNew: true,
+    description: "Dynamic tiger roar design shorts.",
+    colors: ["Black", "Orange"],
+    sizes: ["S", "M", "L", "XL"]
+  },
+  {
+    id: 14,
+    name: "Lightning Tiger",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-05-31_14-55-12-738.jpg-V9ZTj87cUKvYEgcwrwScDa8sq5Etx2.jpeg"
+    ],
+    price: 43.99,
+    category: "shorts",
+    rating: 4.6,
+    stock: 12,
+    inStock: true,
+    isNew: false,
+    description: "Electrifying lightning tiger design shorts.",
+    colors: ["Black", "Blue"],
+    sizes: ["S", "M", "L", "XL"]
+  },
+  {
+    id: 15,
+    name: "School Kills Artists Barbed",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_16-49-53-612.jpg-uJl6FtmGSQI96Yc27UXpCEwtv1oVWU.jpeg"
+    ],
+    price: 41.99,
+    category: "shorts",
+    rating: 4.7,
+    stock: 8,
+    inStock: true,
+    isNew: true,
+    description: "Edgy barbed wire design shorts.",
+    colors: ["Black", "Gray"],
+    sizes: ["S", "M", "L", "XL"]
+  },
+  {
+    id: 16,
+    name: "School Kills Artists Classic",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_16-43-03-079.jpg-4N5qCo1dICKAjdJfRzH2wTwmyOLoQx.jpeg"
+    ],
+    price: 39.99,
+    category: "shorts",
+    rating: 4.5,
+    stock: 15,
+    inStock: true,
+    isNew: false,
+    description: "Classic artistic design shorts.",
+    colors: ["Black", "White"],
+    sizes: ["S", "M", "L", "XL"]
+  },
+  {
+    id: 17,
+    name: "Sypdy Signature",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_17-08-17-546.jpg-RFjwvTT74S72WZ2iVgZzGK8oRU3f3M.jpeg"
+    ],
+    price: 37.99,
+    category: "shorts",
+    rating: 4.6,
+    stock: 20,
+    inStock: true,
+    isNew: true,
+    description: "Signature design shorts with unique style.",
+    colors: ["Black", "Red"],
+    sizes: ["S", "M", "L", "XL"]
+  },
+  
 ];
 
 // Animation variants

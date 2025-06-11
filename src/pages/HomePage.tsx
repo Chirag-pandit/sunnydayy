@@ -30,7 +30,7 @@ const HomePage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              GEAR UP<br />TO DOMINATE
+              MAKE YOUR<br />DAY WITH SunnyDay
             </motion.h1>
             <motion.p 
               className="text-xl md:text-2xl mb-8 text-gray-100"
@@ -38,7 +38,7 @@ const HomePage: React.FC = () => {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              Premium MMA fight gear designed for champions. Elevate your performance with SunnyDay equipment.
+            Premium apparel for those who live bold. SunnyDay – wear your power.
             </motion.p>
               
             <motion.div
