@@ -40,8 +40,8 @@ const allProducts: Product[] = [
     id: 1,
     name: "Classic Fight T-Shirt",
     category: "tshirt",
-    price: 29.99,
-    originalPrice: 39.99,
+    price: 699,
+    originalPrice: 999,
     rating: 4.5,
     stock: 15,
     inStock: true,
@@ -57,7 +57,7 @@ const allProducts: Product[] = [
     id: 5,
     name: "Combat T-Shirt",
     category: "tshirt",
-    price: 34.99,
+    price: 699,
     rating: 4.4,
     stock: 20,
     inStock: true,
@@ -71,8 +71,8 @@ const allProducts: Product[] = [
     id: 6,
     name: "Falling Down Artistic T-Shirt",
     category: "tshirt",
-    price: 34.99,
-    originalPrice: 44.99,
+    price: 699,
+    originalPrice: 999,
     rating: 4.7,
     stock: 20,
     inStock: true,
@@ -89,7 +89,7 @@ const allProducts: Product[] = [
     id: 7,
     name: "Ultra Instinct Goku T-Shirt",
     category: "tshirt",
-    price: 32.99,
+    price: 699,
     rating: 4.8,
     stock: 25,
     inStock: true,
@@ -106,7 +106,7 @@ const allProducts: Product[] = [
     id: 8,
     name: "Insomnia Streetwear T-Shirt",
     category: "tshirt",
-    price: 36.99,
+    price: 699,
     rating: 4.6,
     stock: 18,
     inStock: true,
@@ -123,7 +123,7 @@ const allProducts: Product[] = [
     id: 9,
     name: "Brazilian Jiu-Jitsu Flag T-Shirt",
     category: "tshirt",
-    price: 31.99,
+    price: 699,
     rating: 4.5,
     stock: 22,
     inStock: true,
@@ -140,7 +140,7 @@ const allProducts: Product[] = [
     id: 10,
     name: "Fight Hard Boxing T-Shirt",
     category: "tshirt",
-    price: 33.99,
+    price: 699,
     rating: 4.7,
     stock: 16,
     inStock: true,
@@ -157,7 +157,7 @@ const allProducts: Product[] = [
     id: 11,
     name: "UFC Fighter Silhouette T-Shirt",
     category: "tshirt",
-    price: 35.99,
+    price: 699,
     rating: 4.6,
     stock: 14,
     inStock: true,
@@ -176,7 +176,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_23-40-22-118.jpg-plaVeR8SPC6FC1EpeP3sLLQMpdvoJW.jpeg"
     ],
-    price: 32.99,
+    price: 699,
     category: "tshirt",
     rating: 4.5,
     stock: 15,
@@ -192,7 +192,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Skull.jpg-iwI6EzGKoQbn8R1iu9jV7ZMUqfPjBG.jpeg"
     ],
-    price: 36.99,
+    price: 699,
     category: "tshirt",
     rating: 4.6,
     stock: 12,
@@ -208,7 +208,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/T3c.jpg-AbM8E8w5WC4RoYa7duKINBXTXg9lyk.jpeg"
     ],
-    price: 31.99,
+    price: 699,
     category: "tshirt",
     rating: 4.7,
     stock: 18,
@@ -224,7 +224,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/T4b.jpg-PnuWOr269QBrh13iBKHbIilRdoenCz.jpeg"
     ],
-    price: 33.99,
+    price: 699,
     category: "tshirt",
     rating: 4.4,
     stock: 20,
@@ -240,7 +240,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/travis-vcvW3YVsQJxKvOSfD6Kfd9yPUj0eMk.webp"
     ],
-    price: 39.99,
+    price: 699,
     category: "tshirt",
     rating: 4.8,
     stock: 10,
@@ -257,7 +257,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/insomia_hoddie-ebFCVkMILypdCuUhRhVqJXOBUhCl7S.webp"
     ],
-    price: 65.99,
+    price: 699,
     category: "hoodie",
     rating: 4.7,
     stock: 15,
@@ -273,7 +273,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/sanji-JW9l5yxbdM8RceKezOlhB7WSJx8Y1p.webp"
     ],
-    price: 69.99,
+    price: 699,
     category: "hoodie",
     rating: 4.8,
     stock: 12,
@@ -289,7 +289,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/sukunja-lGPN2neITGBpZmm6rOqvw6bnAUwWtF.webp"
     ],
-    price: 72.99,
+    price: 699,
     category: "hoodie",
     rating: 4.9,
     stock: 10,
@@ -305,7 +305,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/zenitus-sF1vyLtnZlEv2xjFh1fPpMe3J55rbZ.webp"
     ],
-    price: 68.99,
+    price: 699,
     category: "hoodie",
     rating: 4.6,
     stock: 14,
@@ -322,7 +322,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-04-04_11-40-14-436.jpg-aikU6xUkJKcLhGdrqXIdL7yudg2VzQ.jpeg"
     ],
-    price: 45.99,
+    price: 699,
     category: "shorts",
     rating: 4.5,
     stock: 15,
@@ -338,7 +338,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-04-04_11-41-50-263.jpg-RZpJo8OKcOv0pskl6xApApFB48Uoy0.jpeg"
     ],
-    price: 42.99,
+    price: 699,
     category: "shorts",
     rating: 4.6,
     stock: 12,
@@ -354,7 +354,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-05-31_14-52-53-537.jpg-vbA9bCRImUzb8n4ojh0dAIW7e0a6nH.jpeg"
     ],
-    price: 38.99,
+    price: 699,
     category: "shorts",
     rating: 4.7,
     stock: 18,
@@ -370,7 +370,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-05-31_14-53-59-080.jpg-bxlXb1IIubAiuZL2kvHMpRH1qmnuc0.jpeg"
     ],
-    price: 40.99,
+    price: 699,
     category: "shorts",
     rating: 4.5,
     stock: 20,
@@ -386,7 +386,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-05-31_17-01-25-544.jpg-xL6QXE5q6S4jGer6ATjfvPa0Kwbbcw.jpeg"
     ],
-    price: 35.99,
+    price: 699,
     category: "shorts",
     rating: 4.4,
     stock: 15,
@@ -402,7 +402,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_16-22-07-555.jpg-YZLcfGsV5qoRsEVTeXGgSA6vLYsJl9.jpeg"
     ],
-    price: 44.99,
+    price: 699,
     category: "shorts",
     rating: 4.8,
     stock: 10,
@@ -418,7 +418,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-05-31_14-55-12-738.jpg-V9ZTj87cUKvYEgcwrwScDa8sq5Etx2.jpeg"
     ],
-    price: 43.99,
+    price: 699,
     category: "shorts",
     rating: 4.6,
     stock: 12,
@@ -434,7 +434,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_16-49-53-612.jpg-uJl6FtmGSQI96Yc27UXpCEwtv1oVWU.jpeg"
     ],
-    price: 41.99,
+    price: 699,
     category: "shorts",
     rating: 4.7,
     stock: 8,
@@ -450,7 +450,7 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_16-43-03-079.jpg-4N5qCo1dICKAjdJfRzH2wTwmyOLoQx.jpeg"
     ],
-    price: 39.99,
+    price: 699,
     category: "shorts",
     rating: 4.5,
     stock: 15,
@@ -466,7 +466,55 @@ const allProducts: Product[] = [
     images: [
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_17-08-17-546.jpg-RFjwvTT74S72WZ2iVgZzGK8oRU3f3M.jpeg"
     ],
-    price: 37.99,
+    price: 699,
+    category: "shorts",
+    rating: 4.6,
+    stock: 20,
+    inStock: true,
+    isNew: true,
+    description: "Signature design shorts with unique style.",
+    colors: ["Black", "Red"],
+    sizes: ["S", "M", "L", "XL"]
+  },
+  {
+    id: 18,
+    name: "Sypdy Signature",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_17-08-17-546.jpg-RFjwvTT74S72WZ2iVgZzGK8oRU3f3M.jpeg"
+    ],
+    price: 699,
+    category: "shorts",
+    rating: 4.6,
+    stock: 20,
+    inStock: true,
+    isNew: true,
+    description: "Signature design shorts with unique style.",
+    colors: ["Black", "Red"],
+    sizes: ["S", "M", "L", "XL"]
+  },
+  {
+    id: 19,
+    name: "Sypdy Signature",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_17-08-17-546.jpg-RFjwvTT74S72WZ2iVgZzGK8oRU3f3M.jpeg"
+    ],
+    price: 699,
+    category: "shorts",
+    rating: 4.6,
+    stock: 20,
+    inStock: true,
+    isNew: true,
+    description: "Signature design shorts with unique style.",
+    colors: ["Black", "Red"],
+    sizes: ["S", "M", "L", "XL"]
+  },
+  {
+    id: 20,
+    name: "Sypdy Signature",
+    images: [
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_17-08-17-546.jpg-RFjwvTT74S72WZ2iVgZzGK8oRU3f3M.jpeg"
+    ],
+    price: 699,
     category: "shorts",
     rating: 4.6,
     stock: 20,
