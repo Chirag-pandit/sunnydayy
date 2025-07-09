@@ -85,7 +85,7 @@ const HomePage: React.FC = () => {
             >
               <div className="h-96 overflow-hidden">
                 <img 
-                  src="public\images\products\tshirts\Picsart_25-05-01_10-00-19-353.jpg" 
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_17-11-50-568.jpg-0FUnC5c9RAjGh15NrvAbYs5vsElpfM.jpeg" 
                   alt="MMA T-Shirt" 
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
@@ -111,7 +111,7 @@ const HomePage: React.FC = () => {
             >
               <div className="h-96 overflow-hidden">
                 <img 
-                  src="public\images\products\tshirts\Picsart_25-05-31_14-52-53-537.jpg" 
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-04-04_11-41-50-263.jpg-RZpJo8OKcOv0pskl6xApApFB48Uoy0.jpeg" 
                   alt="FIGHTERS SHORTS" 
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
@@ -137,7 +137,7 @@ const HomePage: React.FC = () => {
             >
               <div className="h-96 overflow-hidden">
                 <img 
-                  src="public\images\products\tshirts\insomia_hoddie.webp" 
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/insomia_hoddie-ebFCVkMILypdCuUhRhVqJXOBUhCl7S.webp" 
                   alt="MMA HOODIES" 
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
