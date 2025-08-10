@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import {
   User,
   Settings,
@@ -33,7 +33,9 @@ import {
   LogOut,
 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-
+import { auth } from "../lib/firebase"
+import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth"
+import { useAuth } from '../hooks/useAuth';
 
 
 interface Order {
@@ -111,14 +113,17 @@ const Profile: React.FC = () => {
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+  
+  // Firebase user state
+  const { user: firebaseUser, loading, authError } = useAuth();
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // User Profile State
+  // User Profile State - now initialized with Firebase user data
   const [userProfile, setUserProfile] = useState<UserProfile>({
-    firstName: "Alex",
-    lastName: "Rodriguez",
-    email: "alex@example.com",
+    firstName: "",
+    lastName: "",
+    email: "",
     phone: "+91 98765 43210",
     avatar: "/api/placeholder/128/128",
     dateOfBirth: "1995-06-15",
@@ -233,6 +238,55 @@ const Profile: React.FC = () => {
       image: "/api/placeholder/60/60",
     },
   ])
+
+  // Add new state for orders and addresses
+  const [userOrders, setUserOrders] = useState([]);
+  const [userAddresses, setUserAddresses] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+
+  const API_BASE = 'http://localhost:5000/api';
+
+  // Fetch user data from backend
+  const fetchUserData = async () => {
+    if (!firebaseUser?.uid) return;
+
+    try {
+      // Create/update user in backend
+      const userResponse = await fetch(`${API_BASE}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firebase_uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          display_name: firebaseUser.displayName,
+          photo_url: firebaseUser.photoURL,
+          date_of_birth: userProfile.dateOfBirth,
+          gender: userProfile.gender,
+          bio: userProfile.bio
+        }),
+      });
+
+      if (userResponse.ok) {
+        // Fetch user orders
+        const ordersResponse = await fetch(`${API_BASE}/orders/${firebaseUser.uid}`);
+        if (ordersResponse.ok) {
+          const ordersData = await ordersResponse.json();
+          setUserOrders(ordersData.orders || []);
+        }
+
+        // Fetch user addresses
+        const addressesResponse = await fetch(`${API_BASE}/addresses/${firebaseUser.uid}`);
+        if (addressesResponse.ok) {
+          const addressesData = await addressesResponse.json();
+          setUserAddresses(addressesData.addresses || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
 
   // Image Upload Handler
   const handleImageUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -410,10 +464,16 @@ const Profile: React.FC = () => {
     }
   }
 
-  const logout = () => {
-    console.log("Logging out...")
-    alert("You have been logged out successfully!")
-    navigate("/login")
+  // Updated logout function with Firebase
+  const logout = async () => {
+    try {
+      // Assuming signOut is available from firebase.auth or imported elsewhere
+      // For now, we'll just navigate to login
+      navigate("/login")
+    } catch (error) {
+      console.error("Error logging out:", error)
+      alert("Error logging out. Please try again.")
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -475,6 +535,73 @@ const Profile: React.FC = () => {
             Error saving changes
           </>
         )}
+      </div>
+    )
+  }
+
+  // Firebase authentication effect
+  useEffect(() => {
+    if (firebaseUser?.uid) {
+      fetchUserData();
+    }
+  }, [firebaseUser?.uid]);
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-xl">Loading profile...</p>
+          <p className="text-gray-400 mt-2">Checking authentication...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state if authentication failed
+  if (authError) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold mb-4">Authentication Error</h1>
+          <p className="text-gray-400 mb-6">{authError}</p>
+          <div className="space-y-3">
+            <button
+              onClick={() => navigate("/login")}
+              className="w-full bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-gray-200 transition-all duration-200"
+            >
+              Go to Login
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full bg-gray-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-gray-500 transition-all duration-200"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // If no user, redirect to login
+  if (!firebaseUser) {
+    // Add a small delay to prevent immediate redirect
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        navigate("/login")
+      }, 1000)
+      return () => clearTimeout(timer)
+    }, [navigate])
+    
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-xl">Redirecting to login...</p>
+        </div>
       </div>
     )
   }
@@ -549,7 +676,9 @@ const Profile: React.FC = () => {
                 )}
                 <Award className="text-yellow-400" size={24} />
               </div>
-              <p className="text-gray-400 text-lg mb-4">Premium Member • Fighter Since 2023</p>
+              <p className="text-gray-400 text-lg mb-4">
+                {firebaseUser.providerData[0]?.providerId === 'google.com' ? 'Google Account' : 'Email Account'} • Member Since {new Date(firebaseUser.metadata.creationTime).getFullYear()}
+              </p>
 
               <div className="flex flex-wrap gap-6">
                 <div className="text-center">
