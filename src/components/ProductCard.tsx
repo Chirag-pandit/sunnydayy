@@ -1,87 +1,94 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Heart } from 'lucide-react';
-import { Product } from '../types';
+import React from "react";
+import { Link } from "react-router-dom";
+import { useCart } from "../context/CartContext";
+import { Heart } from "lucide-react";
+import { useWishlist } from "../context/WishlistContext";
 
 interface ProductCardProps {
-  product: Product;
+  product: {
+    id: number;
+    name: string;
+    price: number;
+    images: string[];
+    sizes: string[];
+    colors: string[];
+  };
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
-  const handleQuickView = (e: React.MouseEvent) => {
-    e.preventDefault();
-    navigate(`/products/${product.id}`);
+  const handleAddToCart = () => {
+    addToCart({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      image: product.images[0],
+      size: product.sizes[0],
+      color: product.colors[0],
+    });
   };
 
-  const toggleFavorite = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsFavorite(!isFavorite);
+  const handleWishlistToggle = () => {
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        images: product.images,
+      });
+    }
   };
 
   return (
-    <div 
-      className="group relative"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <Link to={`/products/${product.id}`} className="block">
-        <div className="relative overflow-hidden bg-gray-800 rounded-lg aspect-square">
-          <img 
-            src={product.images[0]} 
+    <div className="bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+      {/* Image + Wishlist */}
+      <div className="relative">
+        <Link to={`/product/${product.id}`}>
+          <img
+            src={product.images[0]}
             alt={product.name}
-            className={`w-full h-full object-cover transition-transform duration-500 ${isHovered ? 'scale-110' : 'scale-100'}`}
+            className="w-full h-64 object-cover"
           />
-          
-          {/* Product tags */}
-          {product.isNew && (
-            <span className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
-              NEW
-            </span>
-          )}
+        </Link>
+        <button
+          onClick={handleWishlistToggle}
+          className="absolute top-2 right-2 bg-white/80 p-2 rounded-full hover:bg-white"
+        >
+          <Heart
+            size={20}
+            className={isInWishlist(product.id) ? "text-red-500 fill-red-500" : "text-gray-500"}
+          />
+        </button>
+      </div>
 
-          {product.category === 'coming-soon' && (
-            <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
-              <span className="text-white font-bold text-lg tracking-wider">COMING SOON</span>
-            </div>
-          )}
-          
-          {/* Quick view button */}
-          <div 
-            className={`absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-            style={{ pointerEvents: isHovered ? 'auto' : 'none' }}
-          >
-            <button 
-              onClick={handleQuickView}
-              className="bg-white text-black font-medium py-2 px-4 rounded-md hover:bg-red-600 hover:text-white transition-colors"
-            >
-              VIEW DETAILS
-            </button>
-          </div>
+      {/* Details */}
+      <div className="p-4">
+        <Link to={`/product/${product.id}`}>
+          <h3 className="text-lg font-semibold text-white">{product.name}</h3>
+        </Link>
+        <p className="text-red-500 font-bold mt-1">₹{product.price}</p>
 
-          {/* Wishlist button */}
+        {/* Buttons */}
+        <div className="flex gap-2 mt-4">
           <button
-            onClick={toggleFavorite}
-            className={`absolute top-2 left-2 p-2 rounded-full transition-colors ${isFavorite ? 'bg-red-600 text-white' : 'bg-white text-gray-800'}`}
+            onClick={handleAddToCart}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex-1"
           >
-            <Heart size={16} fill={isFavorite ? 'white' : 'none'} />
+            Add to Cart
           </button>
+          <Link
+            to={`/product/${product.id}`}
+            className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex-1 text-center"
+          >
+            View
+          </Link>
         </div>
-
-        <div className="mt-4 px-1">
-          <h3 className="text-lg font-medium text-white">{product.name}</h3>
-          <div className="flex items-center mt-1">
-            <p className="font-bold text-white">₹{product.price}</p>
-            {product.originalPrice && (
-              <p className="ml-2 text-gray-500 line-through text-sm">₹{product.originalPrice}</p>
-            )}
-          </div>
-        </div>
-      </Link>
+      </div>
     </div>
   );
 };

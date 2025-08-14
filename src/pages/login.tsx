@@ -1,11 +1,11 @@
-import React from "react"
-import { auth, googleProvider } from "../lib/firebase"
+import { useState } from "react";
+import { auth, googleProvider } from "../lib/firebase";
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
   sendPasswordResetEmail,
   type User,
-} from "firebase/auth"
+} from "firebase/auth";
 
 type Props = {
   onSuccess?: (user: User) => void
@@ -13,12 +13,13 @@ type Props = {
 }
 
 export default function Login({ onSuccess, fullScreen = true }: Props) {
-  const [email, setEmail] = React.useState("")
-  const [password, setPassword] = React.useState("")
-  const [showPassword, setShowPassword] = React.useState(false)
-  const [loading, setLoading] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
-  const [info, setInfo] = React.useState<string | null>(null)
+
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
 
   function mapFirebaseError(code?: string) {
     switch (code) {

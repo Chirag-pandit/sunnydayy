@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Sun, Search, User,Heart, ShoppingCart, X } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useCart } from '../pages/CartContext';
+import { useCart } from '../context/CartContext';
 
 interface Product {
   id: number;

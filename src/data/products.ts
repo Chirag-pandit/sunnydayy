@@ -146,6 +146,9 @@ export const categories = [
   { id: 'coming-soon', name: 'Coming Soon', count: comingSoon.length },
 ];
 
+// Export all product categories
+export { tshirts, hoodies, shorts, comingSoon };
+
 // Price ranges
 export const priceRanges = [
   { id: 'under-50', label: 'Under ₹50', min: 0, max: 50 },
