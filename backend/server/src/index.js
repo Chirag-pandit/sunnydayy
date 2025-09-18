@@ -4,6 +4,10 @@ import mongoose from "mongoose";
 import cors from "cors";
 import morgan from "morgan";
 import cart from "./routes/cart.js";
+import admin from "./routes/admin.js";
+import users from "./routes/users.js";
+import products from "./routes/products.js";
+import categories from "./routes/categories.js";
 
 const app = express();
 
@@ -19,6 +23,10 @@ app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
 // routes
 app.use("/api/cart", cart);
+app.use("/api/admin", admin);
+app.use("/api", users);
+app.use("/api/products", products);
+app.use("/api/categories", categories);
 
 // db + start
 // db + start

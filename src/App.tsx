@@ -5,6 +5,9 @@ import HomePage from "./pages/HomePage";
 import ProductsPage from "./pages/ProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CartPage from "./pages/CartPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import OrderSuccessPage from "./pages/OrderSuccessPage";
+import OrderDetailPage from "./pages/OrderDetailPage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import NotFoundPage from "./pages/NotFoundPage";
@@ -12,6 +15,16 @@ import NotFoundPage from "./pages/NotFoundPage";
 import WishlistPage from "./pages/WishlistPage";
 import Profile from "./pages/profile";
 import Login from './pages/login';
+import AdminOrders from "./pages/admin/orders/index";
+import AdminOrderDetail from "./pages/admin/orders/[id]";
+import AdminProductsPage from "./pages/admin/products/index";
+import AdminEditProductPage from "./pages/admin/products/[id]";
+import AdminNewProductPage from "./pages/admin/products/new";
+import AdminCategoriesPage from "./pages/admin/categories/index";
+import AdminNewCategoryPage from "./pages/admin/categories/new";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
+import AdminLayout from "./components/AdminLayout";
+import AdminDashboard from "./pages/admin/Dashboard";
 import { auth } from "./lib/firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
 
@@ -55,26 +68,46 @@ const App: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
-            <Route path="/login" element={<LoginRoute />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<HomePage />} />
-              <Route path="products" element={<ProductsPage />} />
-              <Route path="products/category/:category" element={<ProductsPage />} />
-              <Route path="products/:id" element={<ProductDetailPage />} />
-              <Route path="cart" element={<CartPage />} />
-              <Route path="wishlist" element={<WishlistPage />} />
-              <Route path="about" element={<AboutPage />} />
-              <Route path="contact" element={<ContactPage />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Route>
+        <Route path="/login" element={<LoginRoute />} />
+        <Route path="/" element={<Layout />}>
+          <Route index element={<HomePage />} />
+          <Route path="products" element={<ProductsPage />} />
+          <Route path="products/category/:category" element={<ProductsPage />} />
+          <Route path="products/:id" element={<ProductDetailPage />} />
+          <Route path="cart" element={<CartPage />} />
+          <Route path="wishlist" element={<WishlistPage />} />
+          <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="order/success" element={<OrderSuccessPage />} />
+          <Route path="order/:id" element={
+            <ProtectedRoute>
+              <OrderDetailPage />
+            </ProtectedRoute>
+          } />
+          <Route path="about" element={<AboutPage />} />
+          <Route path="contact" element={<ContactPage />} />
+          <Route path="profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+        
+        {/* Admin Routes */}
+        <Route path="/admin" element={
+          <AdminProtectedRoute>
+            <AdminLayout />
+          </AdminProtectedRoute>
+        }>
+          <Route index element={<AdminDashboard />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="orders/:id" element={<AdminOrderDetail />} />
+          <Route path="products" element={<AdminProductsPage />} />
+          <Route path="products/new" element={<AdminNewProductPage />} />
+          <Route path="products/:id" element={<AdminEditProductPage />} />
+          <Route path="categories" element={<AdminCategoriesPage />} />
+          <Route path="categories/new" element={<AdminNewCategoryPage />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

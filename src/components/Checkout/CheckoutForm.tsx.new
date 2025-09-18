@@ -1,0 +1,445 @@
+import { useState, FormEvent, ChangeEvent } from 'react';
+import { useRouter } from 'next/router';
+import axios from 'axios';
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+}
+
+interface AddressFormData {
+  fullName: string;
+  email: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  paymentMethod: 'online' | 'cod';
+}
+
+interface OrderResponse {
+  orderId: string;
+  razorpayOrderId?: string;
+  amount?: number;
+  currency?: string;
+  message?: string;
+  success?: boolean;
+}
+
+const phoneRegex = /^[6-9]\d{9}$/;
+const pincodeRegex = /^[1-9][0-9]{5}$/;
+
+interface CheckoutFormProps {
+  cartTotal: number;
+  cartItems: CartItem[];
+}
+
+const CheckoutForm: React.FC<CheckoutFormProps> = ({ cartTotal, cartItems = [] }) => {
+  const router = useRouter();
+  const [formData, setFormData] = useState<AddressFormData>({
+    fullName: '',
+    email: '',
+    phone: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    pincode: '',
+    paymentMethod: 'online'
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const validateForm = (): boolean => {
+    if (!formData.fullName.trim()) {
+      setError('Full name is required');
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+    if (!phoneRegex.test(formData.phone)) {
+      setError('Please enter a valid 10-digit phone number');
+      return false;
+    }
+    if (!formData.addressLine1.trim()) {
+      setError('Address line 1 is required');
+      return false;
+    }
+    if (!formData.city.trim()) {
+      setError('City is required');
+      return false;
+    }
+    if (!formData.state.trim()) {
+      setError('State is required');
+      return false;
+    }
+    if (!pincodeRegex.test(formData.pincode)) {
+      setError('Please enter a valid 6-digit pincode');
+      return false;
+    }
+    return true;
+  };
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (error) setError(null);
+  };
+
+  const loadRazorpay = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        return resolve(true);
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const createOrder = async (orderData: any): Promise<OrderResponse> => {
+    try {
+      const response = await axios.post('/api/orders', orderData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating order:', error);
+      throw new Error('Failed to create order');
+    }
+  };
+
+  const placeOrder = async (paymentMethod: 'online' | 'cod') => {
+    try {
+      const response = await axios.post('/api/orders/place', {
+        ...formData,
+        paymentMethod,
+        amount: cartTotal,
+        items: cartItems
+      });
+      
+      if (response.data.success) {
+        router.push(`/order-confirmation/${response.data.orderId}`);
+      } else {
+        setError(response.data.message || 'Failed to place order');
+      }
+    } catch (error) {
+      console.error('Error placing order:', error);
+      setError('Failed to place order. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePayment = async (e: FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      if (formData.paymentMethod === 'cod') {
+        await placeOrder('cod');
+        return;
+      }
+
+      // For online payment
+      const orderData = await createOrder({
+        ...formData,
+        amount: cartTotal,
+        currency: 'INR',
+        items: cartItems
+      });
+
+      if (!orderData.razorpayOrderId) {
+        throw new Error('Failed to create Razorpay order');
+      }
+
+      const isLoaded = await loadRazorpay();
+      if (!isLoaded) {
+        throw new Error('Failed to load payment gateway');
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: cartTotal * 100, // Convert to paise
+        currency: 'INR',
+        name: 'Your Store Name',
+        description: 'Order Payment',
+        order_id: orderData.razorpayOrderId,
+        handler: async (response: any) => {
+          try {
+            const verifyResponse = await axios.post('/api/verify-payment', {
+              orderId: orderData.orderId,
+              paymentId: response.razorpay_payment_id,
+              signature: response.razorpay_signature
+            });
+
+            if (verifyResponse.data.success) {
+              router.push(`/order-confirmation/${orderData.orderId}`);
+            } else {
+              setError('Payment verification failed. Please contact support.');
+            }
+          } catch (error) {
+            console.error('Payment verification error:', error);
+            setError('Error verifying payment. Please contact support.');
+          }
+        },
+        prefill: {
+          name: formData.fullName,
+          email: formData.email,
+          contact: formData.phone
+        },
+        theme: {
+          color: '#2563EB'
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+      
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      setError(error.message || 'An error occurred during payment. Please try again.');
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto p-6">
+      <h2 className="text-2xl font-bold mb-6">Checkout</h2>
+      <form onSubmit={handlePayment} className="space-y-6">
+        {error && (
+          <div className="bg-red-50 text-red-700 p-4 rounded-md">
+            {error}
+          </div>
+        )}
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">
+              Full Name *
+            </label>
+            <input
+              type="text"
+              id="fullName"
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleInputChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Email *
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+            Phone Number *
+          </label>
+          <input
+            type="tel"
+            id="phone"
+            name="phone"
+            value={formData.phone}
+            onChange={handleInputChange}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            required
+            disabled={isSubmitting}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="addressLine1" className="block text-sm font-medium text-gray-700">
+            Address Line 1 *
+          </label>
+          <input
+            type="text"
+            id="addressLine1"
+            name="addressLine1"
+            value={formData.addressLine1}
+            onChange={handleInputChange}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            required
+            disabled={isSubmitting}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="addressLine2" className="block text-sm font-medium text-gray-700">
+            Address Line 2 (Optional)
+          </label>
+          <input
+            type="text"
+            id="addressLine2"
+            name="addressLine2"
+            value={formData.addressLine2}
+            onChange={handleInputChange}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            disabled={isSubmitting}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label htmlFor="city" className="block text-sm font-medium text-gray-700">
+              City *
+            </label>
+            <input
+              type="text"
+              id="city"
+              name="city"
+              value={formData.city}
+              onChange={handleInputChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="state" className="block text-sm font-medium text-gray-700">
+              State *
+            </label>
+            <input
+              type="text"
+              id="state"
+              name="state"
+              value={formData.state}
+              onChange={handleInputChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="pincode" className="block text-sm font-medium text-gray-700">
+              Pincode *
+            </label>
+            <input
+              type="text"
+              id="pincode"
+              name="pincode"
+              value={formData.pincode}
+              onChange={handleInputChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Payment Method</h3>
+          <div className="space-y-2">
+            <div className="flex items-center">
+              <input
+                id="online"
+                name="paymentMethod"
+                type="radio"
+                value="online"
+                checked={formData.paymentMethod === 'online'}
+                onChange={handleInputChange}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                disabled={isSubmitting}
+              />
+              <label htmlFor="online" className="ml-2 block text-sm text-gray-700">
+                Pay Online (Credit/Debit Card, UPI, Net Banking, Wallets)
+              </label>
+            </div>
+            <div className="flex items-center">
+              <input
+                id="cod"
+                name="paymentMethod"
+                type="radio"
+                value="cod"
+                checked={formData.paymentMethod === 'cod'}
+                onChange={handleInputChange}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                disabled={isSubmitting}
+              />
+              <label htmlFor="cod" className="ml-2 block text-sm text-gray-700">
+                Cash on Delivery (COD)
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8">
+          <button
+            type="submit"
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Processing...
+              </>
+            ) : (
+              'Place Order'
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default CheckoutForm;

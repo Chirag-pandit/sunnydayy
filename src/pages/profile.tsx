@@ -1,50 +1,52 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef, useCallback, useEffect } from "react"
+import { useState, useEffect } from "react"
 import {
   User,
-  Settings,
   Package,
-  Bell,
   Edit3,
-  ChevronRight,
-  Camera,
-  Award,
-  TrendingUp,
   Calendar,
-  Eye,
-  EyeOff,
-  Save,
-  X,
+  LogOut,
   Check,
   AlertCircle,
-  MapPin,
-  CreditCard,
-  Shield,
-  Globe,
-  Moon,
-  Sun,
-  Smartphone,
-  Mail,
-  Lock,
-  Trash2,
+  Award,
+  Save,
+  X,
+  TrendingUp,
+  ChevronRight,
   Download,
-  LogOut,
+  MapPin,
 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-import { auth } from "../lib/firebase"
-import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth"
 import { useAuth } from '../hooks/useAuth';
 
 
 interface Order {
-  id: string
-  date: string
-  status: "delivered" | "processing" | "shipped"
-  total: number
-  items: number
-  image: string
+  _id: string;
+  userId: string;
+  items: Array<{
+    productId: string;
+    name: string;
+    price: number;
+    quantity: number;
+    image: string;
+  }>;
+  amount: number;
+  currency: string;
+  status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled' | 'created';
+  paymentMethod: 'online' | 'cod';
+  fullName: string;
+  email: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface UserProfile {
@@ -115,9 +117,9 @@ const Profile: React.FC = () => {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   
   // Firebase user state
-  const { user: firebaseUser, loading, authError } = useAuth();
+  const { user: firebaseUser, loading } = useAuth();
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  
 
   // User Profile State - now initialized with Firebase user data
   const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -129,13 +131,6 @@ const Profile: React.FC = () => {
     dateOfBirth: "1995-06-15",
     gender: "male",
     bio: "Professional MMA fighter and fitness enthusiast. Training hard every day to achieve greatness.",
-  })
-
-  // Password State
-  const [passwords, setPasswords] = useState({
-    current: "",
-    new: "",
-    confirm: "",
   })
 
   // Addresses State
@@ -182,69 +177,20 @@ const Profile: React.FC = () => {
     },
   ])
 
-  // Notification Settings State
-  const [notifications, setNotifications] = useState<NotificationSettings>({
-    orderUpdates: true,
-    newProducts: true,
-    specialOffers: false,
-    marketingEmails: false,
-    smsNotifications: true,
-    pushNotifications: true,
-  })
+  // Orders State - using real data from API
+  const [orders, setOrders] = useState<Order[]>([]);
 
-  // Privacy Settings State
-  const [privacySettings, setPrivacySettings] = useState<PrivacySettings>({
-    profileVisibility: "private",
-    showEmail: false,
-    showPhone: false,
-    dataCollection: true,
-    analytics: false,
-  })
-
-  // App Settings State
-  const [appSettings, setAppSettings] = useState<AppSettings>({
-    theme: "dark",
-    language: "en",
-    currency: "INR",
-    timezone: "Asia/Kolkata",
-    autoSave: true,
-    twoFactorAuth: false,
-  })
-
-  // Orders State
-  const [orders] = useState<Order[]>([
-    {
-      id: "ORD-001",
-      date: "2024-12-15",
-      status: "delivered",
-      total: 2499,
-      items: 3,
-      image: "/api/placeholder/60/60",
-    },
-    {
-      id: "ORD-002",
-      date: "2024-12-10",
-      status: "shipped",
-      total: 1899,
-      items: 2,
-      image: "/api/placeholder/60/60",
-    },
-    {
-      id: "ORD-003",
-      date: "2024-12-05",
-      status: "processing",
-      total: 3299,
-      items: 1,
-      image: "/api/placeholder/60/60",
-    },
-  ])
-
-  // Add new state for orders and addresses
-  const [userOrders, setUserOrders] = useState([]);
+  // User addresses state (fetched from API)
   const [userAddresses, setUserAddresses] = useState([]);
-  const [ordersLoading, setOrdersLoading] = useState(false);
 
-  const API_BASE = 'http://localhost:5000/api';
+  // Passwords state
+  const [passwords, setPasswords] = useState({
+    current: "",
+    new: "",
+    confirm: ""
+  });
+
+  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 
   // Fetch user data from backend
   const fetchUserData = async () => {
@@ -252,7 +198,7 @@ const Profile: React.FC = () => {
 
     try {
       // Create/update user in backend
-      const userResponse = await fetch(`${API_BASE}/users`, {
+      await fetch(`${API_BASE}/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -268,85 +214,102 @@ const Profile: React.FC = () => {
         }),
       });
 
-      if (userResponse.ok) {
-        // Fetch user orders
-        const ordersResponse = await fetch(`${API_BASE}/orders/${firebaseUser.uid}`);
-        if (ordersResponse.ok) {
-          const ordersData = await ordersResponse.json();
-          setUserOrders(ordersData.orders || []);
+      // We can proceed to fetch orders and addresses even if the user creation/update fails.
+      // The user exists in Firebase, so they should be able to see their data.
+
+      // Fetch user orders
+      const ordersResponse = await fetch(`${API_BASE}/orders/${firebaseUser.uid}`);
+      if (ordersResponse.ok) {
+        const data = await ordersResponse.json();
+        let list = Array.isArray(data)
+          ? data
+          : Array.isArray((data as any).orders)
+          ? (data as any).orders
+          : Array.isArray((data as any).data)
+          ? (data as any).data
+          : [];
+
+        // Fallback: if no orders returned, try admin endpoint and filter by user
+        if (!list || list.length === 0) {
+          try {
+            const adminRes = await fetch(`${API_BASE}/admin/orders`);
+            if (adminRes.ok) {
+              const adminData = await adminRes.json();
+              const adminList = Array.isArray(adminData)
+                ? adminData
+                : Array.isArray((adminData as any).orders)
+                ? (adminData as any).orders
+                : Array.isArray((adminData as any).data)
+                ? (adminData as any).data
+                : [];
+              const filtered = adminList.filter((o: any) =>
+                (o.userId && o.userId === firebaseUser.uid) ||
+                (o.email && o.email === firebaseUser.email)
+              );
+              list = filtered;
+            }
+          } catch (e) {
+            console.warn('Admin orders fallback failed:', e);
+          }
         }
 
-        // Fetch user addresses
-        const addressesResponse = await fetch(`${API_BASE}/addresses/${firebaseUser.uid}`);
-        if (addressesResponse.ok) {
-          const addressesData = await addressesResponse.json();
-          setUserAddresses(addressesData.addresses || []);
-        }
+        setOrders(list);
+      } else {
+        console.error('Failed to fetch orders:', ordersResponse.status);
+      }
+
+      // Fetch user addresses
+      const addressesResponse = await fetch(`${API_BASE}/addresses/${firebaseUser.uid}`);
+      if (addressesResponse.ok) {
+        const addressesData = await addressesResponse.json();
+        setUserAddresses(addressesData.addresses || []);
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
     }
   };
 
-  // Image Upload Handler
-  const handleImageUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("File size must be less than 5MB")
-        return
-      }
-
-      if (!file.type.startsWith("image/")) {
-        alert("Please select an image file")
-        return
-      }
-
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const result = e.target?.result as string
-        setUserProfile((prev) => ({ ...prev, avatar: result }))
-        setSaveStatus("saved")
-        setTimeout(() => setSaveStatus("idle"), 2000)
-      }
-      reader.readAsDataURL(file)
-    }
-  }, [])
+  
 
   // Profile Edit Handlers
   const handleProfileChange = (field: keyof UserProfile, value: string) => {
     setUserProfile((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handlePasswordChange = (field: keyof typeof passwords, value: string) => {
-    setPasswords((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const handleNotificationToggle = (setting: keyof NotificationSettings) => {
-    setNotifications((prev) => ({ ...prev, [setting]: !prev[setting] }))
-  }
-
-  const handlePrivacyToggle = (setting: keyof PrivacySettings) => {
-    if (setting === "profileVisibility") return
-    setPrivacySettings((prev) => ({ ...prev, [setting]: !prev[setting] }))
-  }
-
-  const handleAppSettingToggle = (setting: keyof AppSettings) => {
-    if (["theme", "language", "currency", "timezone"].includes(setting)) return
-    setAppSettings((prev) => ({ ...prev, [setting]: !prev[setting] }))
-  }
 
   // Save Functions
   const handleSaveProfile = async () => {
+    if (!firebaseUser?.uid) return;
+    
     setSaveStatus("saving")
-    await new Promise((resolve) => setTimeout(resolve, 1500))
 
     try {
-      console.log("Saving profile:", userProfile)
-      setSaveStatus("saved")
-      setIsEditing(false)
-      setTimeout(() => setSaveStatus("idle"), 3000)
-    } catch {
+      const response = await fetch(`${API_BASE}/users/${firebaseUser.uid}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          first_name: userProfile.firstName,
+          last_name: userProfile.lastName,
+          email: userProfile.email,
+          phone: userProfile.phone,
+          date_of_birth: userProfile.dateOfBirth,
+          gender: userProfile.gender,
+          bio: userProfile.bio
+        }),
+      });
+
+      if (response.ok) {
+        console.log("Profile saved successfully:", userProfile)
+        setSaveStatus("saved")
+        setIsEditing(false)
+        setTimeout(() => setSaveStatus("idle"), 3000)
+      } else {
+        throw new Error('Failed to save profile');
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error)
       setSaveStatus("error")
       setTimeout(() => setSaveStatus("idle"), 3000)
     }
@@ -420,6 +383,14 @@ const Profile: React.FC = () => {
     )
   }
 
+  const handleAddressChange = (id: string, field: keyof Address, value: string) => {
+    setAddresses((prev) =>
+      prev.map((addr) =>
+        addr.id === id ? { ...addr, [field]: value } : addr
+      )
+    )
+  }
+
   // Payment Method Functions
   const addPaymentMethod = () => {
     const newMethod: PaymentMethod = {
@@ -445,9 +416,8 @@ const Profile: React.FC = () => {
   }
 
   // Order Actions
-  const viewOrderDetails = (orderId: string) => {
-    console.log("Viewing order:", orderId)
-    alert(`Opening order details for ${orderId}`)
+  const viewOrderDetails = (order: Order) => {
+    navigate(`/order/${order._id}`, { state: { order } })
   }
 
   // Account Actions
@@ -482,8 +452,13 @@ const Profile: React.FC = () => {
         return "text-green-400"
       case "shipped":
         return "text-blue-400"
-      case "processing":
+      case "paid":
         return "text-yellow-400"
+      case "pending":
+      case "created":
+        return "text-gray-400"
+      case "cancelled":
+        return "text-red-400"
       default:
         return "text-gray-400"
     }
@@ -495,8 +470,13 @@ const Profile: React.FC = () => {
         return "bg-green-400/10"
       case "shipped":
         return "bg-blue-400/10"
-      case "processing":
+      case "paid":
         return "bg-yellow-400/10"
+      case "pending":
+      case "created":
+        return "bg-gray-400/10"
+      case "cancelled":
+        return "bg-red-400/10"
       default:
         return "bg-gray-400/10"
     }
@@ -505,7 +485,7 @@ const Profile: React.FC = () => {
   const tabItems = [
     { id: "overview", label: "Overview", icon: User },
     { id: "orders", label: "Orders", icon: Package },
-    { id: "settings", label: "Settings", icon: Settings },
+    { id: "edit", label: "Edit Profile", icon: Edit3 },
   ]
 
   const SaveStatusIndicator = () => {
@@ -546,6 +526,20 @@ const Profile: React.FC = () => {
     }
   }, [firebaseUser?.uid]);
 
+  // Initialize profile fields from Firebase user
+  useEffect(() => {
+    if (!firebaseUser) return;
+    const displayName = firebaseUser.displayName || "";
+    const [first, ...rest] = displayName.split(" ");
+    setUserProfile((prev) => ({
+      ...prev,
+      firstName: first || prev.firstName,
+      lastName: rest.join(" ") || prev.lastName,
+      email: firebaseUser.email || prev.email,
+      avatar: firebaseUser.photoURL || prev.avatar,
+    }));
+  }, [firebaseUser]);
+
   // Show loading state while checking authentication
   if (loading) {
     return (
@@ -559,52 +553,7 @@ const Profile: React.FC = () => {
     )
   }
 
-  // Show error state if authentication failed
-  if (authError) {
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8">
-          <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold mb-4">Authentication Error</h1>
-          <p className="text-gray-400 mb-6">{authError}</p>
-          <div className="space-y-3">
-            <button
-              onClick={() => navigate("/login")}
-              className="w-full bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-gray-200 transition-all duration-200"
-            >
-              Go to Login
-            </button>
-            <button
-              onClick={() => window.location.reload()}
-              className="w-full bg-gray-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-gray-500 transition-all duration-200"
-            >
-              Refresh Page
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // If no user, redirect to login
-  if (!firebaseUser) {
-    // Add a small delay to prevent immediate redirect
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        navigate("/login")
-      }, 1000)
-      return () => clearTimeout(timer)
-    }, [navigate])
-    
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-xl">Redirecting to login...</p>
-        </div>
-      </div>
-    )
-  }
+  // Note: The Profile route is already protected in App.tsx, so no need to handle unauthenticated redirect here.
 
   return (
     <div
@@ -627,28 +576,6 @@ const Profile: React.FC = () => {
           />
 
           <div className="relative flex flex-col md:flex-row items-start md:items-center gap-6">
-            <div className="relative group">
-              <div
-                className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-r from-white to-gray-300 p-1 transition-all duration-500 group-hover:scale-105 group-hover:rotate-3"
-                style={{
-                  boxShadow: "0 0 30px rgba(255,255,255,0.2)",
-                  animation: "pulse-glow 3s ease-in-out infinite",
-                }}
-              >
-                <img
-                  src={userProfile.avatar || "/placeholder.svg"}
-                  alt="Profile"
-                  className="w-full h-full rounded-full object-cover"
-                />
-              </div>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute -bottom-1 -right-1 w-8 h-8 bg-white text-black rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-200 hover:bg-gray-200"
-              >
-                <Camera size={14} />
-              </button>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-            </div>
 
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
@@ -677,7 +604,7 @@ const Profile: React.FC = () => {
                 <Award className="text-yellow-400" size={24} />
               </div>
               <p className="text-gray-400 text-lg mb-4">
-                {firebaseUser.providerData[0]?.providerId === 'google.com' ? 'Google Account' : 'Email Account'} • Member Since {new Date(firebaseUser.metadata.creationTime).getFullYear()}
+                {(firebaseUser?.providerData?.[0]?.providerId === 'google.com' ? 'Google Account' : 'Email Account')} • Member Since {firebaseUser?.metadata?.creationTime ? new Date(firebaseUser.metadata.creationTime).getFullYear() : 'N/A'}
               </p>
 
               <div className="flex flex-wrap gap-6">
@@ -687,12 +614,12 @@ const Profile: React.FC = () => {
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white">
-                    ₹{orders.reduce((sum, order) => sum + order.total, 0).toLocaleString()}
+                    ₹{orders.reduce((sum, order) => sum + order.amount, 0).toLocaleString()}
                   </div>
                   <div className="text-sm text-gray-400">Total Spent</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{addresses.length}</div>
+                  <div className="text-2xl font-bold text-white">{userAddresses.length}</div>
                   <div className="text-sm text-gray-400">Addresses</div>
                 </div>
               </div>
@@ -812,7 +739,7 @@ const Profile: React.FC = () => {
                           <span className="text-green-400 text-sm font-medium">+12%</span>
                         </div>
                         <div className="text-2xl font-bold text-white mb-1">
-                          ₹{orders.reduce((sum, order) => sum + order.total, 0).toLocaleString()}
+                          ₹{orders.reduce((sum, order) => sum + order.amount, 0).toLocaleString()}
                         </div>
                         <div className="text-gray-400 text-sm">Total Spent</div>
                       </div>
@@ -833,13 +760,13 @@ const Profile: React.FC = () => {
 
                       <div
                         className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-6 hover:scale-105 transition-all duration-300 cursor-pointer"
-                        onClick={() => setActiveTab("settings")}
+                        aria-label="addresses-card"
                       >
                         <div className="flex items-center justify-between mb-4">
                           <MapPin className="text-purple-400" size={24} />
                           <span className="text-purple-400 text-sm font-medium">Saved</span>
                         </div>
-                        <div className="text-2xl font-bold text-white mb-1">{addresses.length}</div>
+                        <div className="text-2xl font-bold text-white mb-1">{userAddresses.length}</div>
                         <div className="text-gray-400 text-sm">Addresses</div>
                       </div>
                     </div>
@@ -855,37 +782,53 @@ const Profile: React.FC = () => {
                           View All <ChevronRight size={14} />
                         </button>
                       </div>
-                      <div className="space-y-4">
-                        {orders.slice(0, 3).map((order, index) => (
-                          <div
-                            key={order.id}
-                            className="flex items-center gap-4 p-4 bg-zinc-700 rounded-lg hover:bg-zinc-600 transition-all duration-200 cursor-pointer"
-                            style={{
-                              animationDelay: `${index * 0.1}s`,
-                              animation: "fadeInLeft 0.5s ease-out forwards",
-                              opacity: 0,
-                            }}
-                            onClick={() => viewOrderDetails(order.id)}
-                          >
-                            <img
-                              src={order.image || "/placeholder.svg"}
-                              alt="Order"
-                              className="w-12 h-12 rounded-lg object-cover"
-                            />
-                            <div className="flex-1">
-                              <div className="font-medium text-white">Order #{order.id}</div>
-                              <div className="text-sm text-gray-400">
-                                {order.items} items • ₹{order.total.toLocaleString()}
+                      {orders.length === 0 ? (
+                        <div className="text-gray-400 text-sm">No orders yet.</div>
+                      ) : (
+                        <div className="space-y-4">
+                          {orders.slice(0, 3).map((order, index) => (
+                            <div
+                              key={order._id}
+                              className="flex items-center justify-between p-4 bg-zinc-700 rounded-lg hover:bg-zinc-600 transition-all duration-200 cursor-pointer"
+                              style={{
+                                animationDelay: `${index * 0.1}s`,
+                                animation: "slideInRight 0.5s ease-out forwards",
+                                opacity: 0,
+                              }}
+                              onClick={() => viewOrderDetails(order)}
+                            >
+                              <div className="flex items-center space-x-4">
+                                <div className="w-12 h-12 rounded-md bg-gray-200 flex items-center justify-center">
+                                  <Package className="w-6 h-6 text-gray-500" />
+                                </div>
+                                <div>
+                                  <h3 className="font-medium">Order #{order._id.slice(-6)}</h3>
+                                  <p className="text-sm text-muted-foreground">
+                                    {new Date(order.createdAt).toLocaleDateString()} • {order.items.length} items
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-4">
+                                <span className="font-medium">₹{order.amount.toLocaleString()}</span>
+                                <span
+                                  className={`px-2 py-1 rounded-full text-xs font-medium ${order.status === "delivered" ? "bg-green-100 text-green-800" : order.status === "paid" ? "bg-yellow-100 text-yellow-800" : order.status === "shipped" ? "bg-blue-100 text-blue-800" : order.status === "pending" ? "bg-gray-100 text-gray-800" : "bg-red-100 text-red-800"}`}
+                                >
+                                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                </span>
+                                <button
+                                  className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-100 transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    viewOrderDetails(order);
+                                  }}
+                                >
+                                  View
+                                </button>
                               </div>
                             </div>
-                            <span
-                              className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)} ${getStatusBg(order.status)}`}
-                            >
-                              {order.status}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -894,26 +837,29 @@ const Profile: React.FC = () => {
               {activeTab === "orders" && (
                 <div>
                   <h2 className="text-2xl font-bold mb-6 text-white">Order History</h2>
-                  <div className="space-y-4">
-                    {orders.map((order, index) => (
-                      <div
-                        key={order.id}
-                        className="bg-zinc-800 rounded-xl p-6 hover:bg-zinc-700 transition-all duration-300 cursor-pointer group"
-                        style={{
-                          animationDelay: `${index * 0.1}s`,
-                          animation: "slideInRight 0.5s ease-out forwards",
-                          opacity: 0,
-                        }}
-                        onClick={() => viewOrderDetails(order.id)}
-                      >
+                  {orders.length === 0 ? (
+                    <div className="text-gray-400">No orders yet.</div>
+                  ) : (
+                    <div className="space-y-4">
+                      {orders.map((order, index) => (
+                        <div
+                          key={order._id}
+                          className="flex items-center justify-between p-4 border rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-all duration-300 cursor-pointer group"
+                          style={{
+                            animationDelay: `${index * 0.1}s`,
+                            animation: "slideInRight 0.5s ease-out forwards",
+                            opacity: 0,
+                          }}
+                          onClick={() => viewOrderDetails(order)}
+                        >
                         <div className="flex items-center justify-between mb-4">
                           <div>
                             <div className="font-bold text-white group-hover:text-gray-200 transition-colors">
-                              Order #{order.id}
+                              Order #{order._id}
                             </div>
                             <div className="text-gray-400 text-sm flex items-center gap-2">
                               <Calendar size={14} />
-                              {new Date(order.date).toLocaleDateString()}
+                              {new Date(order.createdAt).toLocaleDateString()}
                             </div>
                           </div>
                           <span
@@ -926,611 +872,196 @@ const Profile: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <img
-                              src={order.image || "/placeholder.svg"}
+                              src={order.items[0]?.image || "/placeholder.svg"}
                               alt="Order"
                               className="w-16 h-16 rounded-lg object-cover group-hover:scale-105 transition-transform duration-200"
                             />
                             <div>
-                              <div className="text-white font-medium">{order.items} items</div>
-                              <div className="text-2xl font-bold text-white">₹{order.total.toLocaleString()}</div>
+                              <div className="text-white font-medium">{order.items.length} items</div>
+                              <div className="text-2xl font-bold text-white">₹{order.amount.toLocaleString()}</div>
                             </div>
                           </div>
                           <ChevronRight className="text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-200" />
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {activeTab === "settings" && (
+              {activeTab === "edit" && (
                 <div className="space-y-8">
-                  <h2 className="text-2xl font-bold text-white">Account Settings</h2>
-
-                  {/* Personal Information */}
-                  <div className="bg-zinc-800 rounded-xl p-6">
-                    <h3 className="text-lg font-bold mb-6 text-white flex items-center gap-2">
-                      <User size={20} />
-                      Personal Information
-                    </h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-gray-400 text-sm font-medium mb-2">First Name</label>
-                        <input
-                          type="text"
-                          value={userProfile.firstName}
-                          onChange={(e) => handleProfileChange("firstName", e.target.value)}
-                          className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none transition-colors hover:border-gray-400"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-400 text-sm font-medium mb-2">Last Name</label>
-                        <input
-                          type="text"
-                          value={userProfile.lastName}
-                          onChange={(e) => handleProfileChange("lastName", e.target.value)}
-                          className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none transition-colors hover:border-gray-400"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-400 text-sm font-medium mb-2">Email</label>
-                        <input
-                          type="email"
-                          value={userProfile.email}
-                          onChange={(e) => handleProfileChange("email", e.target.value)}
-                          className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none transition-colors hover:border-gray-400"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-400 text-sm font-medium mb-2">Phone</label>
-                        <input
-                          type="tel"
-                          value={userProfile.phone}
-                          onChange={(e) => handleProfileChange("phone", e.target.value)}
-                          className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none transition-colors hover:border-gray-400"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-400 text-sm font-medium mb-2">Date of Birth</label>
-                        <input
-                          type="date"
-                          value={userProfile.dateOfBirth}
-                          onChange={(e) => handleProfileChange("dateOfBirth", e.target.value)}
-                          className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none transition-colors hover:border-gray-400"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-400 text-sm font-medium mb-2">Gender</label>
-                        <select
-                          value={userProfile.gender}
-                          onChange={(e) => handleProfileChange("gender", e.target.value)}
-                          className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none transition-colors hover:border-gray-400"
-                        >
-                          <option value="male">Male</option>
-                          <option value="female">Female</option>
-                          <option value="other">Other</option>
-                          <option value="prefer-not-to-say">Prefer not to say</option>
-                        </select>
-                      </div>
-                      <div className="md:col-span-2">
-                        <label className="block text-gray-400 text-sm font-medium mb-2">Bio</label>
-                        <textarea
-                          value={userProfile.bio}
-                          onChange={(e) => handleProfileChange("bio", e.target.value)}
-                          rows={3}
-                          className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-4 py-3 text-white focus:border-white focus:outline-none transition-colors hover:border-gray-400 resize-none"
-                          placeholder="Tell us about yourself..."
-                        />
+                  <div>
+                    <h2 className="text-2xl font-bold mb-6 text-white">Edit Profile</h2>
+                    
+                    {/* Personal Information */}
+                    <div className="bg-zinc-800 rounded-xl p-6 mb-8">
+                      <h3 className="text-lg font-bold mb-4 text-white">Personal Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">First Name</label>
+                          <input
+                            type="text"
+                            value={userProfile.firstName}
+                            onChange={(e) => handleProfileChange("firstName", e.target.value)}
+                            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="First Name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Last Name</label>
+                          <input
+                            type="text"
+                            value={userProfile.lastName}
+                            onChange={(e) => handleProfileChange("lastName", e.target.value)}
+                            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Last Name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                          <input
+                            type="email"
+                            value={userProfile.email}
+                            onChange={(e) => handleProfileChange("email", e.target.value)}
+                            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Email"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Phone</label>
+                          <input
+                            type="tel"
+                            value={userProfile.phone}
+                            onChange={(e) => handleProfileChange("phone", e.target.value)}
+                            className="w-full px-4 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Phone"
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex justify-end mt-6">
+                    {/* Addresses */}
+                    <div className="bg-zinc-800 rounded-xl p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold text-white">Saved Addresses</h3>
+                        <button
+                          onClick={addAddress}
+                          className="bg-blue-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-600 transition-colors"
+                        >
+                          Add Address
+                        </button>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        {addresses.map((address) => (
+                          <div key={address.id} className="bg-zinc-700 rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-gray-300">{address.type.charAt(0).toUpperCase() + address.type.slice(1)}</span>
+                                {address.isDefault && (
+                                  <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">Default</span>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => setDefaultAddress(address.id)}
+                                  className="text-blue-400 hover:text-blue-300 text-sm"
+                                >
+                                  Set Default
+                                </button>
+                                <button
+                                  onClick={() => removeAddress(address.id)}
+                                  className="text-red-400 hover:text-red-300 text-sm"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-xs text-gray-400 mb-1">Name</label>
+                                <input
+                                  type="text"
+                                  value={address.name}
+                                  onChange={(e) => handleAddressChange(address.id, 'name', e.target.value)}
+                                  className="w-full px-3 py-1 bg-zinc-600 border border-zinc-500 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-400 mb-1">Type</label>
+                                <select
+                                  value={address.type}
+                                  onChange={(e) => handleAddressChange(address.id, 'type', e.target.value as 'home' | 'work' | 'other')}
+                                  className="w-full px-3 py-1 bg-zinc-600 border border-zinc-500 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                >
+                                  <option value="home">Home</option>
+                                  <option value="work">Work</option>
+                                  <option value="other">Other</option>
+                                </select>
+                              </div>
+                              <div className="md:col-span-2">
+                                <label className="block text-xs text-gray-400 mb-1">Street</label>
+                                <input
+                                  type="text"
+                                  value={address.street}
+                                  onChange={(e) => handleAddressChange(address.id, 'street', e.target.value)}
+                                  className="w-full px-3 py-1 bg-zinc-600 border border-zinc-500 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-400 mb-1">City</label>
+                                <input
+                                  type="text"
+                                  value={address.city}
+                                  onChange={(e) => handleAddressChange(address.id, 'city', e.target.value)}
+                                  className="w-full px-3 py-1 bg-zinc-600 border border-zinc-500 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-400 mb-1">State</label>
+                                <input
+                                  type="text"
+                                  value={address.state}
+                                  onChange={(e) => handleAddressChange(address.id, 'state', e.target.value)}
+                                  className="w-full px-3 py-1 bg-zinc-600 border border-zinc-500 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-400 mb-1">Zip Code</label>
+                                <input
+                                  type="text"
+                                  value={address.zipCode}
+                                  onChange={(e) => handleAddressChange(address.id, 'zipCode', e.target.value)}
+                                  className="w-full px-3 py-1 bg-zinc-600 border border-zinc-500 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-400 mb-1">Country</label>
+                                <input
+                                  type="text"
+                                  value={address.country}
+                                  onChange={(e) => handleAddressChange(address.id, 'country', e.target.value)}
+                                  className="w-full px-3 py-1 bg-zinc-600 border border-zinc-500 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Save Button */}
+                    <div className="flex justify-end">
                       <button
                         onClick={handleSaveProfile}
                         disabled={saveStatus === "saving"}
-                        className="bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-gray-200 transition-all duration-200 hover:scale-105 disabled:opacity-50 flex items-center gap-2"
+                        className="bg-green-500 text-white px-6 py-3 rounded-full font-bold hover:bg-green-600 transition-all duration-200 flex items-center gap-2 hover:scale-105 disabled:opacity-50"
                       >
                         <Save size={16} />
-                        {saveStatus === "saving" ? "Saving..." : "Save Profile"}
+                        {saveStatus === "saving" ? "Saving..." : "Save Changes"}
                       </button>
-                    </div>
-                  </div>
-
-                  {/* Addresses */}
-                  <div className="bg-zinc-800 rounded-xl p-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        <MapPin size={20} />
-                        Addresses
-                      </h3>
-                      <button
-                        onClick={addAddress}
-                        className="bg-white text-black px-4 py-2 rounded-lg font-bold hover:bg-gray-200 transition-all duration-200 hover:scale-105 text-sm"
-                      >
-                        Add Address
-                      </button>
-                    </div>
-
-                    <div className="space-y-4">
-                      {addresses.map((address) => (
-                        <div key={address.id} className="bg-zinc-700 rounded-lg p-4">
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-medium text-white">{address.name}</span>
-                                {address.isDefault && (
-                                  <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                                    Default
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-gray-400 text-sm">
-                                {address.street}, {address.city}, {address.state} {address.zipCode}
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                              {!address.isDefault && (
-                                <button
-                                  onClick={() => setDefaultAddress(address.id)}
-                                  className="text-gray-400 hover:text-white text-xs"
-                                >
-                                  Set Default
-                                </button>
-                              )}
-                              <button
-                                onClick={() => removeAddress(address.id)}
-                                className="text-red-400 hover:text-red-300"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Payment Methods */}
-                  <div className="bg-zinc-800 rounded-xl p-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        <CreditCard size={20} />
-                        Payment Methods
-                      </h3>
-                      <button
-                        onClick={addPaymentMethod}
-                        className="bg-white text-black px-4 py-2 rounded-lg font-bold hover:bg-gray-200 transition-all duration-200 hover:scale-105 text-sm"
-                      >
-                        Add Payment
-                      </button>
-                    </div>
-
-                    <div className="space-y-4">
-                      {paymentMethods.map((method) => (
-                        <div key={method.id} className="bg-zinc-700 rounded-lg p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-zinc-600 rounded-lg flex items-center justify-center">
-                                <CreditCard size={20} className="text-gray-400" />
-                              </div>
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium text-white">{method.name}</span>
-                                  {method.isDefault && (
-                                    <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                                      Default
-                                    </span>
-                                  )}
-                                </div>
-                                {method.expiryDate && (
-                                  <div className="text-gray-400 text-sm">Expires {method.expiryDate}</div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                              {!method.isDefault && (
-                                <button
-                                  onClick={() => setDefaultPaymentMethod(method.id)}
-                                  className="text-gray-400 hover:text-white text-xs"
-                                >
-                                  Set Default
-                                </button>
-                              )}
-                              <button
-                                onClick={() => removePaymentMethod(method.id)}
-                                className="text-red-400 hover:text-red-300"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Security */}
-                  <div className="bg-zinc-800 rounded-xl p-6">
-                    <h3 className="text-lg font-bold mb-6 text-white flex items-center gap-2">
-                      <Lock size={20} />
-                      Security
-                    </h3>
-
-                    <div className="space-y-6">
-                      <div>
-                        <label className="block text-gray-400 text-sm font-medium mb-2">Current Password</label>
-                        <div className="relative">
-                          <input
-                            type={showPassword ? "text" : "password"}
-                            value={passwords.current}
-                            onChange={(e) => handlePasswordChange("current", e.target.value)}
-                            placeholder="Enter current password"
-                            className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-4 py-3 pr-12 text-white focus:border-white focus:outline-none transition-colors hover:border-gray-400"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                          >
-                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-gray-400 text-sm font-medium mb-2">New Password</label>
-                          <div className="relative">
-                            <input
-                              type={showNewPassword ? "text" : "password"}
-                              value={passwords.new}
-                              onChange={(e) => handlePasswordChange("new", e.target.value)}
-                              placeholder="Enter new password"
-                              className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-4 py-3 pr-12 text-white focus:border-white focus:outline-none transition-colors hover:border-gray-400"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowNewPassword(!showNewPassword)}
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                            >
-                              {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                            </button>
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-gray-400 text-sm font-medium mb-2">Confirm Password</label>
-                          <div className="relative">
-                            <input
-                              type={showConfirmPassword ? "text" : "password"}
-                              value={passwords.confirm}
-                              onChange={(e) => handlePasswordChange("confirm", e.target.value)}
-                              placeholder="Confirm new password"
-                              className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-4 py-3 pr-12 text-white focus:border-white focus:outline-none transition-colors hover:border-gray-400"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                            >
-                              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 bg-zinc-700 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <Shield className="text-blue-400" size={20} />
-                          <div>
-                            <div className="font-medium text-white">Two-Factor Authentication</div>
-                            <div className="text-sm text-gray-400">Add an extra layer of security</div>
-                          </div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={appSettings.twoFactorAuth}
-                            onChange={() => handleAppSettingToggle("twoFactorAuth")}
-                            className="sr-only peer"
-                          />
-                          <div className="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-white"></div>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end mt-6">
-                      <button
-                        onClick={handleSavePassword}
-                        disabled={saveStatus === "saving" || !passwords.current || !passwords.new || !passwords.confirm}
-                        className="bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-gray-200 transition-all duration-200 hover:scale-105 disabled:opacity-50 flex items-center gap-2"
-                      >
-                        <Save size={16} />
-                        {saveStatus === "saving" ? "Updating..." : "Update Password"}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Notifications */}
-                  <div className="bg-zinc-800 rounded-xl p-6">
-                    <h3 className="text-lg font-bold mb-6 text-white flex items-center gap-2">
-                      <Bell size={20} />
-                      Notifications
-                    </h3>
-
-                    <div className="space-y-4">
-                      {Object.entries(notifications).map(([key, value]) => {
-                        const labels = {
-                          orderUpdates: "Order updates",
-                          newProducts: "New product releases",
-                          specialOffers: "Special offers",
-                          marketingEmails: "Marketing emails",
-                          smsNotifications: "SMS notifications",
-                          pushNotifications: "Push notifications",
-                        }
-
-                        const icons = {
-                          orderUpdates: Package,
-                          newProducts: Bell,
-                          specialOffers: TrendingUp,
-                          marketingEmails: Mail,
-                          smsNotifications: Smartphone,
-                          pushNotifications: Bell,
-                        }
-
-                        const Icon = icons[key as keyof typeof icons]
-
-                        return (
-                          <div
-                            key={key}
-                            className="flex items-center justify-between p-4 bg-zinc-700 rounded-lg hover:bg-zinc-600 transition-colors"
-                          >
-                            <div className="flex items-center gap-3">
-                              <Icon className="text-gray-400" size={20} />
-                              <span className="text-white font-medium">{labels[key as keyof typeof labels]}</span>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={value}
-                                onChange={() => handleNotificationToggle(key as keyof NotificationSettings)}
-                                className="sr-only peer"
-                              />
-                              <div className="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-white"></div>
-                            </label>
-                          </div>
-                        )
-                      })}
-                    </div>
-
-                    <div className="flex justify-end mt-6">
-                      <button
-                        onClick={() => handleSaveSettings("notification")}
-                        disabled={saveStatus === "saving"}
-                        className="bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-gray-200 transition-all duration-200 hover:scale-105 disabled:opacity-50 flex items-center gap-2"
-                      >
-                        <Save size={16} />
-                        {saveStatus === "saving" ? "Saving..." : "Save Preferences"}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Privacy Settings */}
-                  <div className="bg-zinc-800 rounded-xl p-6">
-                    <h3 className="text-lg font-bold mb-6 text-white flex items-center gap-2">
-                      <Shield size={20} />
-                      Privacy & Data
-                    </h3>
-
-                    <div className="space-y-4">
-                      <div className="p-4 bg-zinc-700 rounded-lg">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-white font-medium">Profile Visibility</span>
-                          <select
-                            value={privacySettings.profileVisibility}
-                            onChange={(e) =>
-                              setPrivacySettings((prev) => ({
-                                ...prev,
-                                profileVisibility: e.target.value as "public" | "private" | "friends",
-                              }))
-                            }
-                            className="bg-zinc-600 border border-zinc-500 rounded px-3 py-1 text-white text-sm"
-                          >
-                            <option value="public">Public</option>
-                            <option value="friends">Friends Only</option>
-                            <option value="private">Private</option>
-                          </select>
-                        </div>
-                        <div className="text-sm text-gray-400">Control who can see your profile information</div>
-                      </div>
-
-                      {Object.entries(privacySettings)
-                        .filter(([key]) => key !== "profileVisibility")
-                        .map(([key, value]) => {
-                          const labels = {
-                            showEmail: "Show email address",
-                            showPhone: "Show phone number",
-                            dataCollection: "Allow data collection for analytics",
-                            analytics: "Share usage analytics",
-                          }
-
-                          return (
-                            <div
-                              key={key}
-                              className="flex items-center justify-between p-4 bg-zinc-700 rounded-lg hover:bg-zinc-600 transition-colors"
-                            >
-                              <span className="text-white font-medium">{labels[key as keyof typeof labels]}</span>
-                              <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={value}
-                                  onChange={() => handlePrivacyToggle(key as keyof PrivacySettings)}
-                                  className="sr-only peer"
-                                />
-                                <div className="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-white"></div>
-                              </label>
-                            </div>
-                          )
-                        })}
-                    </div>
-
-                    <div className="flex justify-end mt-6">
-                      <button
-                        onClick={() => handleSaveSettings("privacy")}
-                        disabled={saveStatus === "saving"}
-                        className="bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-gray-200 transition-all duration-200 hover:scale-105 disabled:opacity-50 flex items-center gap-2"
-                      >
-                        <Save size={16} />
-                        {saveStatus === "saving" ? "Saving..." : "Save Privacy Settings"}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* App Settings */}
-                  <div className="bg-zinc-800 rounded-xl p-6">
-                    <h3 className="text-lg font-bold mb-6 text-white flex items-center gap-2">
-                      <Settings size={20} />
-                      App Preferences
-                    </h3>
-
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="p-4 bg-zinc-700 rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-white font-medium flex items-center gap-2">
-                              {appSettings.theme === "dark" ? <Moon size={16} /> : <Sun size={16} />}
-                              Theme
-                            </span>
-                            <select
-                              value={appSettings.theme}
-                              onChange={(e) =>
-                                setAppSettings((prev) => ({
-                                  ...prev,
-                                  theme: e.target.value as "light" | "dark" | "auto",
-                                }))
-                              }
-                              className="bg-zinc-600 border border-zinc-500 rounded px-3 py-1 text-white text-sm"
-                            >
-                              <option value="light">Light</option>
-                              <option value="dark">Dark</option>
-                              <option value="auto">Auto</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="p-4 bg-zinc-700 rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-white font-medium flex items-center gap-2">
-                              <Globe size={16} />
-                              Language
-                            </span>
-                            <select
-                              value={appSettings.language}
-                              onChange={(e) => setAppSettings((prev) => ({ ...prev, language: e.target.value }))}
-                              className="bg-zinc-600 border border-zinc-500 rounded px-3 py-1 text-white text-sm"
-                            >
-                              <option value="en">English</option>
-                              <option value="hi">Hindi</option>
-                              <option value="es">Spanish</option>
-                              <option value="fr">French</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="p-4 bg-zinc-700 rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-white font-medium">Currency</span>
-                            <select
-                              value={appSettings.currency}
-                              onChange={(e) => setAppSettings((prev) => ({ ...prev, currency: e.target.value }))}
-                              className="bg-zinc-600 border border-zinc-500 rounded px-3 py-1 text-white text-sm"
-                            >
-                              <option value="INR">INR (₹)</option>
-                              <option value="USD">USD ($)</option>
-                              <option value="EUR">EUR (€)</option>
-                              <option value="GBP">GBP (£)</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="p-4 bg-zinc-700 rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-white font-medium">Timezone</span>
-                            <select
-                              value={appSettings.timezone}
-                              onChange={(e) => setAppSettings((prev) => ({ ...prev, timezone: e.target.value }))}
-                              className="bg-zinc-600 border border-zinc-500 rounded px-3 py-1 text-white text-sm"
-                            >
-                              <option value="Asia/Kolkata">Asia/Kolkata</option>
-                              <option value="America/New_York">America/New_York</option>
-                              <option value="Europe/London">Europe/London</option>
-                              <option value="Asia/Tokyo">Asia/Tokyo</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 bg-zinc-700 rounded-lg hover:bg-zinc-600 transition-colors">
-                        <span className="text-white font-medium">Auto-save preferences</span>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={appSettings.autoSave}
-                            onChange={() => handleAppSettingToggle("autoSave")}
-                            className="sr-only peer"
-                          />
-                          <div className="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-white"></div>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end mt-6">
-                      <button
-                        onClick={() => handleSaveSettings("app")}
-                        disabled={saveStatus === "saving"}
-                        className="bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-gray-200 transition-all duration-200 hover:scale-105 disabled:opacity-50 flex items-center gap-2"
-                      >
-                        <Save size={16} />
-                        {saveStatus === "saving" ? "Saving..." : "Save App Settings"}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Danger Zone */}
-                  <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-6">
-                    <h3 className="text-lg font-bold mb-6 text-red-400 flex items-center gap-2">
-                      <AlertCircle size={20} />
-                      Danger Zone
-                    </h3>
-
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between p-4 bg-red-900/30 rounded-lg">
-                        <div>
-                          <div className="font-medium text-white">Download Your Data</div>
-                          <div className="text-sm text-gray-400">Get a copy of all your account data</div>
-                        </div>
-                        <button
-                          onClick={downloadData}
-                          className="bg-gray-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-500 transition-colors flex items-center gap-2"
-                        >
-                          <Download size={16} />
-                          Download
-                        </button>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 bg-red-900/30 rounded-lg">
-                        <div>
-                          <div className="font-medium text-white">Delete Account</div>
-                          <div className="text-sm text-gray-400">Permanently delete your account and all data</div>
-                        </div>
-                        <button
-                          onClick={deleteAccount}
-                          className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center gap-2"
-                        >
-                          <Trash2 size={16} />
-                          Delete
-                        </button>
-                      </div>
                     </div>
                   </div>
                 </div>
