@@ -6,9 +6,17 @@ interface Product {
   _id: string;
   name: string;
   price: number;
-  category: string;
+  category: {
+    _id: string;
+    name: string;
+    slug: string;
+  } | string;
   stock: number;
-  images: { url: string }[];
+  images: (string | { url: string })[];
+  isActive?: boolean;
+  featured?: boolean;
+  sku?: string;
+  brand?: string;
 }
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
@@ -27,7 +35,9 @@ const AdminProductsPage: React.FC = () => {
           throw new Error('Failed to fetch products');
         }
         const data = await response.json();
-        setProducts(data.products || data || []);
+        const productsData = data.products || data || [];
+        setProducts(productsData);
+        console.log('Fetched products:', productsData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
       } finally {
@@ -97,16 +107,29 @@ const AdminProductsPage: React.FC = () => {
                 <td className="w-full max-w-0 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:w-auto sm:max-w-none sm:pl-6">
                   <div className="flex items-center">
                     <div className="h-10 w-10 flex-shrink-0">
-                      <img className="h-10 w-10 rounded-md object-cover" src={product.images[0]?.url || '/placeholder.svg'} alt={product.name} />
+                      <img 
+                        className="h-10 w-10 rounded-md object-cover" 
+                        src={typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url || '/placeholder.svg'} 
+                        alt={product.name} 
+                      />
                     </div>
                     <div className="ml-4">
                       <div className="font-medium text-gray-900">{product.name}</div>
+                      <div className="text-gray-500">{product.sku || product.brand || ''}</div>
                     </div>
                   </div>
                 </td>
-                <td className="hidden px-3 py-4 text-sm text-gray-500 lg:table-cell">{product.category}</td>
-                <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell">₹{product.price.toLocaleString()}</td>
-                <td className="px-3 py-4 text-sm text-gray-500">{product.stock}</td>
+                <td className="hidden px-3 py-4 text-sm text-gray-500 lg:table-cell">
+                  {typeof product.category === 'object' ? product.category.name : product.category || 'N/A'}
+                </td>
+                <td className="hidden px-3 py-4 text-sm text-gray-500 sm:table-cell">
+                  ₹{product.price.toLocaleString('en-IN')}
+                </td>
+                <td className="px-3 py-4 text-sm text-gray-500">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${product.stock > 10 ? 'bg-green-100 text-green-800' : product.stock > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
+                    {product.stock} in stock
+                  </span>
+                </td>
                 <td className="py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                   <Link to={`/admin/products/${product._id}`} className="text-indigo-600 hover:text-indigo-900">
                     Edit<span className="sr-only">, {product.name}</span>

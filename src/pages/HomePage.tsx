@@ -9,6 +9,7 @@ import { AppleCardsCarouselDemo } from '@/components/AppleCardsCarouseDemo';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 import ProductSection from '../components/ProductSection';
+import DynamicCategories from '../components/DynamicCategories';
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -61,100 +62,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Featured Categories */}
-      <section className="py-16 bg-secondary-dark">
-        <div className="container">
-          <motion.h2 
-            className="section-title text-center mb-12"
-            variants={fadeIn}
-            initial="initial"
-            whileInView="animate"
-            viewport={{ once: true }}
-          >
-            <span className="text-primary">FIGHT</span> READY GEAR
-          </motion.h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Category 1 - MMA Gloves */}
-            <motion.div 
-              className="group relative overflow-hidden rounded-lg"
-              variants={fadeIn}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-            >
-              <div className="h-96 overflow-hidden">
-                <img 
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-06-03_17-11-50-568.jpg-0FUnC5c9RAjGh15NrvAbYs5vsElpfM.jpeg" 
-                  alt="MMA T-Shirt" 
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-secondary-dark to-transparent opacity-80"></div>
-              <div className="absolute bottom-0 left-0 p-6">
-                <h3 className="text-2xl font-heading font-bold text-primary mb-2">MMA T-Shirt</h3>
-                <p className="text-gray-100 mb-4">Precision-engineered for perfect strikes.</p>
-                <Link to="/products?category=tshirt" className="inline-flex items-center text-primary font-heading hover:text-primary-light transition-colors">
-                  SHOP T-Shirt <ArrowRight size={16} className="ml-2" />
-                </Link>
-              </div>
-            </motion.div>
-
-            {/* Category 2 - Fight Shorts */}
-            <motion.div 
-              className="group relative overflow-hidden rounded-lg"
-              variants={fadeIn}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-            >
-              <div className="h-96 overflow-hidden">
-                <img 
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Picsart_25-04-04_11-41-50-263.jpg-RZpJo8OKcOv0pskl6xApApFB48Uoy0.jpeg" 
-                  alt="FIGHTERS SHORTS" 
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-secondary-dark to-transparent opacity-80"></div>
-              <div className="absolute bottom-0 left-0 p-6">
-                <h3 className="text-2xl font-heading font-bold text-primary mb-2">MMA SHORTS</h3>
-                <p className="text-gray-100 mb-4">Ultimate flexibility for your toughest moves.</p>
-                <Link to="/products?category=shorts" className="inline-flex items-center text-primary font-heading hover:text-primary-light transition-colors">
-                  SHOP SHORTS <ArrowRight size={16} className="ml-2" />
-                </Link>
-              </div>
-            </motion.div>
-
-            {/* Category 3 - Rashguards */}
-            <motion.div 
-              className="group relative overflow-hidden rounded-lg"
-              variants={fadeIn}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
-            >
-              <div className="h-96 overflow-hidden">
-                <img 
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/insomia_hoddie-ebFCVkMILypdCuUhRhVqJXOBUhCl7S.webp" 
-                  alt="MMA HOODIES" 
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-secondary-dark to-transparent opacity-80"></div>
-              <div className="absolute bottom-0 left-0 p-6">
-                <h3 className="text-2xl font-heading font-bold text-primary mb-2">MMA HOODIE</h3>
-                <p className="text-gray-100 mb-4">Superior protection during intense training.</p>
-                <Link to="/products?category=hoodie" className="inline-flex items-center text-primary font-heading hover:text-primary-light transition-colors">
-                  SHOP HOODIE <ArrowRight size={16} className="ml-2" />
-                </Link>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
+      <DynamicCategories />
 
       <ProductSection/>
 
