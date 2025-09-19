@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { normalizeImageUrl } from '../../../utils/imageUtils';
 
 interface ImageObj { url: string }
 interface Product {
@@ -117,7 +118,10 @@ const AdminEditProductPage: React.FC = () => {
   };
 
   // Helpers for images
-  const imageToUrl = (img: ImageObj | string): string => (typeof img === 'string' ? img : (img?.url || ''));
+  const imageToUrl = (img: ImageObj | string): string => {
+    const url = typeof img === 'string' ? img : (img?.url || '');
+    return normalizeImageUrl(url);
+  };
 
   const handleRemoveImage = (index: number) => {
     if (!product) return;

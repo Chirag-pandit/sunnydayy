@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import { normalizeImageUrl } from '../utils/imageUtils';
 
 interface Category {
   _id: string;
@@ -117,7 +118,7 @@ const DynamicCategories: React.FC = () => {
             >
               <div className="h-96 overflow-hidden">
                 <img 
-                  src={category.image || `https://picsum.photos/seed/${category.slug}/400/300.jpg`} 
+                  src={normalizeImageUrl(category.image) || `https://picsum.photos/seed/${category.slug}/400/300.jpg`} 
                   alt={category.name} 
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   onError={(e) => {

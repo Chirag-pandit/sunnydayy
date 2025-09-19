@@ -3,9 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../api/client';
-
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
-const API_ORIGIN = (() => { try { return new URL(API_BASE).origin; } catch { return 'http://localhost:5000'; } })();
+import { getPrimaryImage } from '../utils/imageUtils';
 
 // Extend the Product type to include the image property for display
 interface DisplayProduct {
@@ -65,29 +63,7 @@ const ProductsPage = () => {
         }
 
         const mapped: DisplayProduct[] = items.map((p: any) => {
-          const rawFirst = Array.isArray(p.images) && p.images.length > 0
-            ? (typeof p.images[0] === 'string' ? p.images[0] : p.images[0]?.url || '')
-            : '';
-          const first = typeof rawFirst === 'string' ? rawFirst.trim() : '';
-          const isAbsolute = /^https?:\/\//i.test(first);
-          const isRelative = !isAbsolute && first.startsWith('/');
-          const isUploadsNoSlash = !isAbsolute && !isRelative && first.toLowerCase().startsWith('uploads/');
-          const looksLikeBarePlaceholder = /^\d{2,4}x\d{2,4}\?/.test(first);
-          const startsWithPlaceholderHost = /^via\.placeholder\.com\//i.test(first);
-          let normalized = first;
-          if (isRelative) {
-            normalized = `${API_ORIGIN}${first}`;
-          } else if (isUploadsNoSlash) {
-            normalized = `${API_ORIGIN}/${first}`; // handle 'uploads/...' missing leading slash
-          } else if (looksLikeBarePlaceholder) {
-            normalized = `https://via.placeholder.com/${first}`;
-          } else if (startsWithPlaceholderHost) {
-            normalized = `https://${first}`;
-          }
-          const finalUrl = /^https?:\/\//i.test(normalized) && normalized.length > 0
-            ? normalized
-            : 'https://placehold.co/600x600?text=Product';
-          const img = finalUrl;
+          const img = getPrimaryImage(p.images, 'https://placehold.co/600x600?text=Product');
           return {
             _id: p._id,
             name: p.name,

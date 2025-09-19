@@ -3,15 +3,16 @@ import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { Heart } from "lucide-react";
 import { useWishlist } from "../context/WishlistContext";
+import { getPrimaryImage } from "../utils/imageUtils";
 
 interface ProductCardProps {
   product: {
-    id: number;
+    id: string;
     name: string;
     price: number;
     images: string[];
-    sizes: string[];
-    colors: string[];
+    sizes?: string[];
+    colors?: string[];
   };
 }
 
@@ -25,9 +26,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       name: product.name,
       price: product.price,
       quantity: 1,
-      image: product.images[0],
-      size: product.sizes[0],
-      color: product.colors[0],
+      image: getPrimaryImage(product.images),
+      size: product.sizes?.[0] || '',
+      color: product.colors?.[0] || '',
     });
   };
 
@@ -50,9 +51,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       <div className="relative">
         <Link to={`/product/${product.id}`}>
           <img
-            src={product.images[0]}
+            src={getPrimaryImage(product.images)}
             alt={product.name}
             className="w-full h-64 object-cover"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = 'https://placehold.co/800x800?text=Product';
+            }}
           />
         </Link>
         <button

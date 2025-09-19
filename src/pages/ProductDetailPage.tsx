@@ -8,9 +8,8 @@ import { ChevronLeft, ChevronRight, ShoppingCart, Heart, Star, ChevronDown, Truc
 import { useCart } from "../context/CartContext"
 import { useWishlist } from "../context/WishlistContext"
 import { api } from "../api/client"
+import { normalizeImageUrls } from "../utils/imageUtils"
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
-const API_ORIGIN = (() => { try { return new URL(API_BASE).origin; } catch { return 'http://localhost:5000'; } })();
 
 type BackendProduct = {
   _id: string;
@@ -59,17 +58,7 @@ const ProductDetailPage: React.FC = () => {
           navigate("/products")
           return
         }
-        const imagesArr: Array<string> = Array.isArray(raw.images) ? raw.images.map((im: any) => (typeof im === 'string' ? im : im?.url || '')) : []
-        const norm = (src: string) => {
-          const s = (src || '').trim()
-          const abs = /^https?:\/\//i.test(s)
-          const rel = !abs && s.startsWith('/')
-          const upNoSlash = !abs && !rel && s.toLowerCase().startsWith('uploads/')
-          if (rel) return `${API_ORIGIN}${s}`
-          if (upNoSlash) return `${API_ORIGIN}/${s}`
-          return abs ? s : ''
-        }
-        const normalizedImgs = imagesArr.map(norm).filter(Boolean)
+        const normalizedImgs = normalizeImageUrls(raw.images)
         const mapped: BackendProduct = {
           _id: String(raw._id),
           name: raw.name,
