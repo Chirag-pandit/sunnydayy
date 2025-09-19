@@ -51,7 +51,7 @@ const AdminProductsPage: React.FC = () => {
   const handleDelete = async (productId: string) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        const response = await fetch(`${API_BASE}/admin/products/${productId}`, {
+        const response = await fetch(`${API_BASE}/products/${productId}`, {
           method: 'DELETE',
         });
 
@@ -71,7 +71,7 @@ const AdminProductsPage: React.FC = () => {
   if (error) return <div className="p-8 text-red-600">Error: {error}</div>;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="py-8">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
           <h1 className="text-xl font-semibold text-gray-900">Products</h1>

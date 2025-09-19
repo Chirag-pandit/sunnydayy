@@ -17,7 +17,7 @@ export default function OrderDetails() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  const [status, setStatus] = useState('pending');
+  const [status, setStatus] = useState<Order['status']>('pending');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export default function OrderDetails() {
         if (!response.ok) throw new Error('Failed to fetch order');
         const data = await response.json();
         setOrder(data);
-        setStatus(data.status);
+        setStatus(data.status as Order['status']);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load order');
       } finally {
@@ -54,7 +54,7 @@ export default function OrderDetails() {
       if (!response.ok) throw new Error('Failed to update order status');
       
       // Update the local order
-      setOrder(prev => prev ? { ...prev, status } : null);
+      setOrder(prev => prev ? { ...prev, status: status as Order['status'] } : null);
       alert('Order status updated successfully');
     } catch (err) {
       console.error('Error updating order status:', err);
@@ -86,7 +86,7 @@ export default function OrderDetails() {
   if (!order) return <div className="p-8">Order not found</div>;
 
   return (
-    <div className="px-4 py-8 sm:px-6 lg:px-8">
+    <div className="py-8">
       <div className="mb-6">
         <button 
           onClick={() => navigate('/admin/orders')} 
@@ -106,11 +106,11 @@ export default function OrderDetails() {
         <div className="mt-4 md:mt-0 flex items-center space-x-3">
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+            onChange={(e) => setStatus(e.target.value as Order['status'])}
+            className="block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-900"
           >
             {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
+              <option key={option.value} value={option.value as Order['status']}>
                 {option.label}
               </option>
             ))}
@@ -119,10 +119,10 @@ export default function OrderDetails() {
             type="button"
             onClick={handleStatusUpdate}
             disabled={updating || status === order.status}
-            className={`inline-flex items-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm ${
+            className={`inline-flex items-center rounded-md px-4 py-2 text-sm font-medium shadow-sm border ${
               updating || status === order.status
-                ? 'bg-indigo-300 cursor-not-allowed'
-                : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2'
+                ? 'bg-indigo-100 text-indigo-700 border-indigo-200 cursor-not-allowed'
+                : 'bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2'
             }`}
           >
             {updating ? 'Updating...' : 'Update Status'}

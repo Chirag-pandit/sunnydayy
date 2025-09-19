@@ -46,6 +46,7 @@ const OrderDetailPage: React.FC = () => {
   const [order, setOrder] = useState<Order | null>(initialOrder ?? null);
   const [fetching, setFetching] = useState<boolean>(!initialOrder);
   const [error, setError] = useState<string>("");
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     if (order || !id) return;
@@ -72,12 +73,21 @@ const OrderDetailPage: React.FC = () => {
           }
         }
 
-        // Fallback: if not found, try fetching the single order directly (e.g., from admin endpoint)
+        // Next, try a public/single order endpoint if available
+        const singlePublic = await fetch(`${API_BASE}/orders/id/${id}`).catch(() => null);
+        if (singlePublic && singlePublic.ok) {
+          const o = await singlePublic.json();
+          if (o && o._id && (o.userId === firebaseUser.uid || o.email === firebaseUser.email)) {
+            setOrder(o);
+            return;
+          }
+        }
+
+        // Fallback: admin endpoint
         const singleOrderRes = await fetch(`${API_BASE}/admin/orders/${id}`);
         if (singleOrderRes.ok) {
           const singleOrder = await singleOrderRes.json();
           if (singleOrder && singleOrder._id) {
-            // Basic validation to ensure it's a real user's order
             if (singleOrder.userId === firebaseUser.uid || singleOrder.email === firebaseUser.email) {
               setOrder(singleOrder);
               return; // Exit if found
@@ -95,7 +105,7 @@ const OrderDetailPage: React.FC = () => {
 
     fetchOrderDetails();
 
-  }, [order, id, firebaseUser?.uid]);
+  }, [order, id, firebaseUser?.uid, firebaseUser?.email]);
 
   const getStatusBadge = (status: Order["status"]) => {
     const clsMap: Record<Order["status"], string> = {
@@ -137,9 +147,49 @@ const OrderDetailPage: React.FC = () => {
     );
   }
 
-  if (!order) return null;
+  if (!order) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <p className="text-gray-300 mb-4">Order not found.</p>
+          <button
+            onClick={() => navigate("/profile")}
+            className="bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-gray-200 transition-all"
+          >
+            Back to Profile
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const createdDate = new Date(order.createdAt).toLocaleString();
+  const canCancel = order.status === 'pending' || order.status === 'paid';
+
+  const handleCancelOrder = async () => {
+    if (!order?._id) return;
+    if (!canCancel) return;
+    const ok = window.confirm('Are you sure you want to cancel this order?');
+    if (!ok) return;
+    try {
+      setCancelling(true);
+      const res = await fetch(`${API_BASE}/admin/orders/${order._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled' }),
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(text || 'Failed to cancel order');
+      }
+      setOrder({ ...order, status: 'cancelled' });
+      alert('Your order has been cancelled.');
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Failed to cancel order');
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-8">
@@ -151,8 +201,19 @@ const OrderDetailPage: React.FC = () => {
           >
             ← Back to Profile
           </button>
-          <div>
+          <div className="flex items-center gap-3">
             {getStatusBadge(order.status)}
+            <button
+              onClick={handleCancelOrder}
+              disabled={!canCancel || cancelling}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors border ${
+                !canCancel || cancelling
+                  ? 'bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed'
+                  : 'bg-red-600 hover:bg-red-700 text-white border-red-600'
+              }`}
+            >
+              {cancelling ? 'Cancelling...' : 'Cancel Order'}
+            </button>
           </div>
         </div>
 

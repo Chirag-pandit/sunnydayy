@@ -109,7 +109,7 @@ const HomePage: React.FC = () => {
                 <div className="absolute -inset-0.5 bg-primary rounded-full blur-md opacity-70 animate-pulse-slow"></div>
                 <div className="relative bg-secondary-dark rounded-full p-8">
                   <img 
-                    src="public\images\products\tshirts\Gloves.jpg" 
+                    src="/images/products/tshirts/Gloves.jpg" 
                     alt="Championship MMA Gloves" 
                     className="rounded-full w-full"
                   />

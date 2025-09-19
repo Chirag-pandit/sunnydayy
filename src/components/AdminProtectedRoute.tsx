@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'sharmajrohit1004@gmail.com';
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'Sunnydayofficial22@gmail.com';
 
 const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();

@@ -2,62 +2,112 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../hooks/useAuth';
-import { Product } from '../types';
-import { allProducts, tshirts, hoodies, shorts, comingSoon } from '../data/products';
+import { api } from '../api/client';
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
+const API_ORIGIN = (() => { try { return new URL(API_BASE).origin; } catch { return 'http://localhost:5000'; } })();
 
 // Extend the Product type to include the image property for display
-interface DisplayProduct extends Omit<Product, 'images'> {
+interface DisplayProduct {
+  _id: string;
+  name: string;
+  price: number;
+  originalPrice?: number;
+  stock: number;
+  description?: string;
   image: string;
 }
 
-// Helper to get products by category
-const getProductsByCategory = (category?: string): DisplayProduct[] => {
-  let products: Product[] = [];
-  
-  if (!category) {
-    products = allProducts;
-  } else {
-    const categoryMap: Record<string, Product[]> = {
-      'tshirt': tshirts,
-      'hoodie': hoodies,
-      'shorts': shorts,
-      'coming-soon': comingSoon
-    };
-    products = categoryMap[category] || [];
-  }
-  
-  return products.map(product => ({
-    ...product,
-    image: product.images?.[0] || '',
-    description: product.description 
-      ? (product.description.length > 100 
-          ? product.description.substring(0, 100) + '...' 
-          : product.description)
-      : ''
-  }));
+// Helper to truncate description
+const brief = (text?: string) => {
+  if (!text) return '';
+  return text.length > 100 ? text.substring(0, 100) + '...' : text;
 };
 
 const ProductsPage = () => {
   const [products, setProducts] = useState<DisplayProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const { category } = useParams();
-  const { addToCart } = useCart() as { addToCart: (item: any) => Promise<void> };
+  const { category: categorySlug } = useParams();
+
+  const { addToCart } = useCart() as any;
   const { user } = useAuth();
 
   useEffect(() => {
-    try {
+    const load = async () => {
       setLoading(true);
-      // Get and set products for the current category
-      const categoryProducts = getProductsByCategory(category);
-      setProducts(categoryProducts);
-    } catch (err) {
-      console.error('Error loading products:', err);
-      setError('Error loading products. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  }, [category]);
+      setError('');
+      try {
+        let items: any[] = [];
+        if (categorySlug) {
+          // Resolve slug/name to category _id
+          const catRes = await api<any>(`/categories`);
+          const list = Array.isArray(catRes)
+            ? catRes
+            : Array.isArray((catRes as any).categories)
+            ? (catRes as any).categories
+            : Array.isArray((catRes as any).data)
+            ? (catRes as any).data
+            : [];
+          const match = list.find((c: any) =>
+            (c.slug && String(c.slug).toLowerCase() === String(categorySlug).toLowerCase()) ||
+            (c.name && String(c.name).toLowerCase() === String(categorySlug).toLowerCase())
+          );
+          if (match?._id) {
+            const data = await api<any>(`/products/category/${match._id}`);
+            items = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
+          } else {
+            items = [];
+          }
+        } else {
+          const data = await api<any>(`/products`);
+          items = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
+        }
+
+        const mapped: DisplayProduct[] = items.map((p: any) => {
+          const rawFirst = Array.isArray(p.images) && p.images.length > 0
+            ? (typeof p.images[0] === 'string' ? p.images[0] : p.images[0]?.url || '')
+            : '';
+          const first = typeof rawFirst === 'string' ? rawFirst.trim() : '';
+          const isAbsolute = /^https?:\/\//i.test(first);
+          const isRelative = !isAbsolute && first.startsWith('/');
+          const isUploadsNoSlash = !isAbsolute && !isRelative && first.toLowerCase().startsWith('uploads/');
+          const looksLikeBarePlaceholder = /^\d{2,4}x\d{2,4}\?/.test(first);
+          const startsWithPlaceholderHost = /^via\.placeholder\.com\//i.test(first);
+          let normalized = first;
+          if (isRelative) {
+            normalized = `${API_ORIGIN}${first}`;
+          } else if (isUploadsNoSlash) {
+            normalized = `${API_ORIGIN}/${first}`; // handle 'uploads/...' missing leading slash
+          } else if (looksLikeBarePlaceholder) {
+            normalized = `https://via.placeholder.com/${first}`;
+          } else if (startsWithPlaceholderHost) {
+            normalized = `https://${first}`;
+          }
+          const finalUrl = /^https?:\/\//i.test(normalized) && normalized.length > 0
+            ? normalized
+            : 'https://placehold.co/600x600?text=Product';
+          const img = finalUrl;
+          return {
+            _id: p._id,
+            name: p.name,
+            price: p.price,
+            originalPrice: p.originalPrice,
+            stock: p.stock ?? 0,
+            description: brief(p.description),
+            image: img,
+          } as DisplayProduct;
+        });
+        setProducts(mapped);
+      } catch (err) {
+        console.error('Error loading products:', err);
+        setError('Error loading products. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [categorySlug]);
 
   const handleAddToCart = async (product: DisplayProduct) => {
     if (!user) {
@@ -67,17 +117,20 @@ const ProductsPage = () => {
     
     try {
       const cartItem = {
-        productId: product.id,
+        productId: product._id,
         name: product.name,
         price: product.price,
         quantity: 1,
         image: product.image,
         // Add default size/color if needed
-        size: product.sizes?.[0],
-        color: product.colors?.[0]
+        size: undefined,
+        color: undefined
       };
       
-      await addToCart(cartItem);
+      const maybePromise = addToCart(cartItem);
+      if (maybePromise && typeof maybePromise.then === 'function') {
+        await maybePromise;
+      }
       alert('Product added to cart successfully!');
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -91,7 +144,7 @@ const ProductsPage = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8 text-center">
-        {category ? `${category.charAt(0).toUpperCase() + category.slice(1).replace('-', ' ')}` : 'All Products'}
+        {categorySlug ? `${categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1).replace('-', ' ')}` : 'All Products'}
       </h1>
       
       {products.length === 0 ? (
@@ -101,24 +154,25 @@ const ProductsPage = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {products.map((product) => (
-            <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <div key={product._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
               <div className="h-48 bg-gray-100 overflow-hidden">
-                <img 
-                  src={product.image} 
+                <img
+                  src={product.image}
                   alt={product.name}
+                  loading="lazy"
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.currentTarget.src = 'https://via.placeholder.com/300x300?text=Product+Image';
+                    e.currentTarget.src = 'https://placehold.co/600x600?text=Product';
                   }}
                 />
               </div>
               <div className="p-4">
-                <h3 className="text-lg font-semibold mb-2 line-clamp-1">{product.name}</h3>
-                <p className="text-gray-600 text-sm mb-3 line-clamp-2 h-10">{product.description}</p>
+                <h3 className="text-lg font-semibold mb-2 line-clamp-1 text-gray-900">{product.name}</h3>
+                <p className="text-gray-700 text-sm mb-3 line-clamp-2 h-10">{product.description}</p>
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-lg font-bold">${product.price.toFixed(2)}</span>
+                  <span className="text-lg font-bold text-gray-900">₹{product.price.toFixed(2)}</span>
                   {product.originalPrice && (
-                    <span className="text-sm text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
+                    <span className="text-sm text-gray-500 line-through">₹{product.originalPrice.toFixed(2)}</span>
                   )}
                 </div>
                 <p className={`text-sm mb-3 ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -126,7 +180,7 @@ const ProductsPage = () => {
                 </p>
                 <div className="flex flex-col space-y-2">
                   <Link 
-                    to={`/products/${product.id}`}
+                    to={`/products/${product._id}`}
                     className="bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 rounded transition-colors"
                   >
                     View Details

@@ -4,11 +4,14 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../hooks/useAuth';
 import { calculateCartTotal, calculateGst, calculateShipping } from '../utils/cartUtils';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { api } from '../api/client';
 
 interface Address {
   id: string;
   type: "home" | "work" | "other";
   name: string;
+  phone?: string;
+  email?: string;
   street: string;
   city: string;
   state: string;
@@ -48,29 +51,60 @@ const CheckoutPage: React.FC = () => {
   const gstAmount = calculateGst(subtotal);
   const total = Math.round((subtotal + shipping + gstAmount) * 100) / 100; // Round to 2 decimal places
 
-  // Load saved addresses
+  // Backend: load saved addresses for the current user
   useEffect(() => {
-    const loadAddresses = () => {
-      // Try to get addresses from localStorage first
-      const savedAddresses = localStorage.getItem('userAddresses');
-      if (savedAddresses) {
-        try {
-          const parsedAddresses = JSON.parse(savedAddresses);
-          setAddresses(parsedAddresses);
-          
-          // Set default address as selected
-          const defaultAddress = parsedAddresses.find((addr: Address) => addr.isDefault);
-          if (defaultAddress) {
-            setSelectedAddressId(defaultAddress.id);
-            setUseNewAddress(false);
-            populateFormFromAddress(defaultAddress);
-          }
-        } catch (error) {
-          console.error('Error parsing saved addresses:', error);
+    const loadAddresses = async () => {
+      try {
+        const data = await api<{ addresses: Array<any> }>("/addresses");
+        let list: Address[] = data.addresses.map((a: any) => ({
+          id: a._id,
+          type: a.type,
+          name: a.name,
+          phone: a.phone,
+          email: a.email,
+          street: a.street,
+          city: a.city,
+          state: a.state,
+          zipCode: a.zipCode,
+          country: a.country ?? "India",
+          isDefault: !!a.isDefault,
+        }));
+        // Fallback for legacy 'guest' data if none under current user
+        if (!list.length) {
+          try {
+            const fb = await api<{ addresses: Array<any> }>(
+              "/addresses",
+              { headers: { "x-user-id": "guest" } },
+              { userId: "guest" }
+            );
+            list = fb.addresses.map((a: any) => ({
+              id: a._id,
+              type: a.type,
+              name: a.name,
+              phone: a.phone,
+              email: a.email,
+              street: a.street,
+              city: a.city,
+              state: a.state,
+              zipCode: a.zipCode,
+              country: a.country ?? "India",
+              isDefault: !!a.isDefault,
+            }));
+          } catch {}
         }
+        console.debug('CheckoutPage: addresses fetched', list);
+        setAddresses(list);
+
+        const def = list.find((x) => x.isDefault) || list[0];
+        if (def) {
+          setSelectedAddressId(def.id);
+          setUseNewAddress(false);
+          populateFormFromAddress(def);
+        }
+      } catch (e) {
+        console.warn("Failed to load addresses", e);
       }
     };
-
     loadAddresses();
   }, []);
 
@@ -78,6 +112,8 @@ const CheckoutPage: React.FC = () => {
     setFormData(prev => ({
       ...prev,
       fullName: address.name,
+      email: address.email ?? prev.email,
+      phone: address.phone ?? prev.phone,
       address: address.street,
       city: address.city,
       state: address.state,
@@ -91,6 +127,48 @@ const CheckoutPage: React.FC = () => {
     const selectedAddress = addresses.find(addr => addr.id === addressId);
     if (selectedAddress) {
       populateFormFromAddress(selectedAddress);
+    }
+  };
+
+  const saveCurrentFormAsAddress = async () => {
+    try {
+      const payload = {
+        type: 'home',
+        name: formData.fullName,
+        phone: formData.phone,
+        email: formData.email,
+        street: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.pincode,
+        country: 'India',
+        isDefault: true,
+      };
+      const res = await api<{ success: boolean; address: any }>("/addresses", {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      if (res?.success) {
+        const a = res.address;
+        const newAddr: Address = {
+          id: a._id,
+          type: a.type,
+          name: a.name,
+          street: a.street,
+          city: a.city,
+          state: a.state,
+          zipCode: a.zipCode,
+          country: a.country ?? 'India',
+          isDefault: !!a.isDefault,
+        };
+        // refresh address list - default first
+        const updated = [newAddr, ...addresses.map(x => ({ ...x, isDefault: false }))];
+        setAddresses(updated);
+        setSelectedAddressId(newAddr.id);
+        setUseNewAddress(false);
+      }
+    } catch (e) {
+      console.error('Failed to save address', e);
     }
   };
 
@@ -198,6 +276,11 @@ const CheckoutPage: React.FC = () => {
         throw new Error('Please fill in all required fields');
       }
       
+      // If user entered a new address, save it first
+      if (useNewAddress) {
+        await saveCurrentFormAsAddress();
+      }
+
       // For Razorpay test mode, create a simple test order
       const testAmount = Math.max(100, Math.round(total * 100)); // Minimum 100 paise for test
       const orderData = {
@@ -263,14 +346,49 @@ const CheckoutPage: React.FC = () => {
         }
         
       } else {
-        // For Cash on Delivery
-        console.log('Processing COD order...');
-        // In a real app, you would save the order to your database here
-        console.log('Order data:', orderData);
-        
-        // Clear cart and redirect to success page
-        clearCart();
-        navigate('/order/success');
+        // For Cash on Delivery: persist order on backend
+        console.log('Processing COD order (persisting to backend)...');
+
+        // Map form data to backend schema
+        const payload = {
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          addressLine1: formData.address,
+          addressLine2: '',
+          city: formData.city,
+          state: formData.state,
+          pincode: formData.pincode,
+          paymentMethod: 'cod' as const,
+          amount: total, // in INR, backend stores as number
+          currency: 'INR',
+          items: cartItems.map((it) => ({
+            id: (it as any).productId ?? it.id ?? '',
+            name: it.name,
+            price: it.price,
+            quantity: it.quantity,
+            image: it.image,
+          })),
+        };
+
+        try {
+          const res = await api<{ success: boolean; orderId: string }>(
+            '/orders/place',
+            {
+              method: 'POST',
+              body: JSON.stringify(payload),
+            }
+          );
+          if (res?.success) {
+            clearCart();
+            navigate('/order/success');
+            return;
+          }
+          throw new Error('Order placement failed');
+        } catch (err) {
+          console.error('COD order persistence failed:', err);
+          throw err;
+        }
       }
     } catch (err) {
       setError('Failed to process order. Please try again.');
@@ -502,47 +620,51 @@ const CheckoutPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="border-t border-gray-200 pt-6">
-                      <h3 className="text-lg font-medium mb-4">Payment Method</h3>
-                      <div className="space-y-3">
-                        <label className="flex items-center p-4 border rounded-md cursor-pointer hover:border-blue-500">
-                          <input
-                            type="radio"
-                            name="paymentMethod"
-                            value="cod"
-                            checked={formData.paymentMethod === 'cod'}
-                            onChange={handleInputChange}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                          />
-                          <div className="ml-3">
-                            <p className="font-medium">Cash on Delivery (COD)</p>
-                            <p className="text-sm text-gray-500">Pay when you receive your order</p>
-                          </div>
-                        </label>
-                        <label className="flex items-center p-4 border rounded-md cursor-pointer hover:border-blue-500">
-                          <input
-                            type="radio"
-                            name="paymentMethod"
-                            value="online"
-                            checked={formData.paymentMethod === 'online'}
-                            onChange={handleInputChange}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                          />
-                          <div className="ml-3">
-                            <p className="font-medium">Pay Online</p>
-                            <p className="text-sm text-gray-500">Credit/Debit card, UPI, Netbanking</p>
-                          </div>
-                        </label>
-                      </div>
-                    </div>
+                    {/* Payment method moved to right column to always display */}
                   </form>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Order Summary */}
+          {/* Right Column: Payment + Summary */}
           <div>
+            {/* Payment Method (always visible) */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <h3 className="text-lg font-medium mb-4">Payment Method</h3>
+              <div className="space-y-3">
+                <label className="flex items-center p-4 border rounded-md cursor-pointer hover:border-blue-500">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="cod"
+                    checked={formData.paymentMethod === 'cod'}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                  />
+                  <div className="ml-3">
+                    <p className="font-medium">Cash on Delivery (COD)</p>
+                    <p className="text-sm text-gray-500">Pay when you receive your order</p>
+                  </div>
+                </label>
+                <label className="flex items-center p-4 border rounded-md cursor-pointer hover:border-blue-500">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="online"
+                    checked={formData.paymentMethod === 'online'}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                  />
+                  <div className="ml-3">
+                    <p className="font-medium">Pay Online</p>
+                    <p className="text-sm text-gray-500">Credit/Debit card, UPI, Netbanking</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* Order Summary */}
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-4">
               <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
               

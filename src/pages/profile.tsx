@@ -19,6 +19,7 @@ import {
   MapPin,
 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { api, getUserId } from '../api/client';
 import { useAuth } from '../hooks/useAuth';
 
 
@@ -44,7 +45,7 @@ interface Order {
   city: string;
   state: string;
   pincode: string;
-  country: string;
+  country?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -194,76 +195,47 @@ const Profile: React.FC = () => {
 
   // Fetch user data from backend
   const fetchUserData = async () => {
-    if (!firebaseUser?.uid) return;
-
+    // We can proceed even while auth stabilizes; api client sends current userId
     try {
-      // Create/update user in backend
-      await fetch(`${API_BASE}/users`, {
+      // Ensure backend has a user record (no-op placeholder in current API)
+      await api(`/users`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
-          firebase_uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          display_name: firebaseUser.displayName,
-          photo_url: firebaseUser.photoURL,
+          firebase_uid: firebaseUser?.uid,
+          email: firebaseUser?.email,
+          display_name: firebaseUser?.displayName,
+          photo_url: firebaseUser?.photoURL,
           date_of_birth: userProfile.dateOfBirth,
           gender: userProfile.gender,
-          bio: userProfile.bio
-        }),
+          bio: userProfile.bio,
+        })
       });
 
-      // We can proceed to fetch orders and addresses even if the user creation/update fails.
-      // The user exists in Firebase, so they should be able to see their data.
-
-      // Fetch user orders
-      const ordersResponse = await fetch(`${API_BASE}/orders/${firebaseUser.uid}`);
-      if (ordersResponse.ok) {
-        const data = await ordersResponse.json();
-        let list = Array.isArray(data)
-          ? data
-          : Array.isArray((data as any).orders)
-          ? (data as any).orders
-          : Array.isArray((data as any).data)
-          ? (data as any).data
-          : [];
-
-        // Fallback: if no orders returned, try admin endpoint and filter by user
-        if (!list || list.length === 0) {
-          try {
-            const adminRes = await fetch(`${API_BASE}/admin/orders`);
-            if (adminRes.ok) {
-              const adminData = await adminRes.json();
-              const adminList = Array.isArray(adminData)
-                ? adminData
-                : Array.isArray((adminData as any).orders)
-                ? (adminData as any).orders
-                : Array.isArray((adminData as any).data)
-                ? (adminData as any).data
-                : [];
-              const filtered = adminList.filter((o: any) =>
-                (o.userId && o.userId === firebaseUser.uid) ||
-                (o.email && o.email === firebaseUser.email)
-              );
-              list = filtered;
-            }
-          } catch (e) {
-            console.warn('Admin orders fallback failed:', e);
-          }
-        }
-
-        setOrders(list);
-      } else {
-        console.error('Failed to fetch orders:', ordersResponse.status);
+      // Orders for current user (api helper appends userId header/query)
+      let list = await api<any[]>(`/orders/${getUserId()}`);
+      if (!Array.isArray(list)) {
+        // defensive: normalize structure if API wraps result
+        const maybe = (list as any);
+        list = Array.isArray(maybe.orders) ? maybe.orders : Array.isArray(maybe.data) ? maybe.data : [];
       }
 
-      // Fetch user addresses
-      const addressesResponse = await fetch(`${API_BASE}/addresses/${firebaseUser.uid}`);
-      if (addressesResponse.ok) {
-        const addressesData = await addressesResponse.json();
-        setUserAddresses(addressesData.addresses || []);
+      // Fallback: try admin orders and filter by current user/email if empty
+      if (!list || list.length === 0) {
+        try {
+          const adminList = await api<any[]>(`/admin/orders`);
+          const uid = firebaseUser?.uid || getUserId();
+          const email = firebaseUser?.email;
+          const filtered = (Array.isArray(adminList) ? adminList : ((adminList as any).orders || (adminList as any).data || [])).filter((o: any) => (
+            (o.userId && o.userId === uid) || (email && o.email === email)
+          ));
+          list = filtered;
+        } catch {}
       }
+      setOrders((list || []) as unknown as Order[]);
+
+      // Addresses
+      const addr = await api<{ addresses: any[] }>(`/addresses`);
+      setUserAddresses(addr.addresses || []);
     } catch (error) {
       console.error('Error fetching user data:', error);
     }

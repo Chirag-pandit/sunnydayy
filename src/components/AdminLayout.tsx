@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -16,6 +17,10 @@ const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
+  const userEmail = user?.email || '';
+  const userName = user?.displayName || 'Admin User';
+  const avatarInitial = (user?.displayName || user?.email || 'A').charAt(0).toUpperCase();
 
   const menuItems = [
     {
@@ -42,18 +47,7 @@ const AdminLayout = () => {
       path: '/admin/categories',
       description: 'Manage product categories'
     },
-    {
-      title: 'Customers',
-      icon: Users,
-      path: '/admin/customers',
-      description: 'Manage customer accounts'
-    },
-    {
-      title: 'Settings',
-      icon: Settings,
-      path: '/admin/settings',
-      description: 'Admin settings'
-    }
+    // Removed Customers and Settings per request
   ];
 
   const handleLogout = () => {
@@ -76,11 +70,10 @@ const AdminLayout = () => {
       )}
 
       {/* Sidebar */}
-      <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 lg:static lg:inset-0
-      `}>
+      <div
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
+      >
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b">
@@ -141,33 +134,38 @@ const AdminLayout = () => {
       </div>
 
       {/* Main content */}
-      <div className="lg:ml-64">
-        {/* Top bar */}
-        <div className="bg-white shadow-sm border-b">
-          <div className="flex items-center justify-between px-6 py-4">
+      <div className="lg:ml-64 flex flex-col min-h-screen">
+        {/* Top bar (sticky) */}
+        <div className="sticky top-0 z-40 bg-white shadow-sm border-b">
+          <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <button
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden p-2 rounded-md hover:bg-gray-100"
+              aria-label="Open sidebar"
             >
               <Menu size={20} />
             </button>
-            
-            <div className="flex items-center space-x-4">
+            <div className="flex-1" />
+            <div className="flex items-center space-x-3">
               <div className="text-right">
-                <div className="text-sm font-medium text-gray-900">Admin User</div>
-                <div className="text-xs text-gray-500">sharmajrohit1004@gmail.com</div>
+                <div className="text-sm font-medium text-gray-900">{userName}</div>
+                {userEmail && <div className="text-xs text-gray-500">{userEmail}</div>}
               </div>
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">A</span>
+                <span className="text-white text-sm font-medium">{avatarInitial}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Page content */}
-        <div className="p-6">
-          <Outlet />
-        </div>
+        <main className="flex-1">
+          <div className="px-4 sm:px-6 lg:px-8 py-6">
+            <div className="max-w-7xl mx-auto">
+              <Outlet />
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );

@@ -75,7 +75,7 @@ export default function AdminOrders() {
   if (error) return <div className="p-8 text-red-600">Error: {error}</div>;
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8">
+    <div className="py-8">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
           <h1 className="text-2xl font-semibold text-gray-900">Orders</h1>

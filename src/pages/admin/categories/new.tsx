@@ -58,18 +58,28 @@ const AdminNewCategoryPage: React.FC = () => {
     try {
       const finalSlug = formData.slug || makeSlug(formData.name);
       const payload = {
-        ...formData,
-        slug: finalSlug
-      };
+        name: formData.name,
+        description: formData.description,
+        slug: finalSlug,
+        image: formData.image,
+        // send null when no parent selected to avoid ObjectId cast error
+        parentCategory: formData.parentCategory ? formData.parentCategory : null,
+        isActive: formData.isActive === true || formData.isActive === 'true',
+        sortOrder: Number(formData.sortOrder || 0),
+        metaTitle: formData.metaTitle,
+        metaDescription: formData.metaDescription,
+      } as any;
       
-      const res = await fetch(`${API_BASE}/admin/categories`, {
+      const res = await fetch(`${API_BASE}/categories`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Failed to create category');
+        const text = await res.text();
+        let message = 'Failed to create category';
+        try { const data = JSON.parse(text); if (data?.message) message = data.message; } catch {}
+        throw new Error(message);
       }
       alert('Category created successfully!');
       navigate('/admin/categories');
@@ -81,7 +91,7 @@ const AdminNewCategoryPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="py-8">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
           <h1 className="text-2xl font-bold text-gray-900">Add New Category</h1>
@@ -101,7 +111,7 @@ const AdminNewCategoryPage: React.FC = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900"
                 placeholder="e.g., MMA Gloves"
                 required
               />
@@ -116,7 +126,7 @@ const AdminNewCategoryPage: React.FC = () => {
                 value={formData.description}
                 onChange={handleInputChange}
                 rows={3}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900"
                 placeholder="Describe this category..."
                 required
               />
@@ -131,7 +141,7 @@ const AdminNewCategoryPage: React.FC = () => {
                 name="slug"
                 value={formData.slug}
                 onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900"
                 placeholder="auto-generated if empty"
               />
               <p className="mt-1 text-xs text-gray-500">URL-friendly version of the name</p>
@@ -146,7 +156,7 @@ const AdminNewCategoryPage: React.FC = () => {
                 name="image"
                 value={formData.image}
                 onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900"
                 placeholder="/images/categories/category-name.jpg"
                 required
               />
@@ -161,7 +171,7 @@ const AdminNewCategoryPage: React.FC = () => {
                 name="sortOrder"
                 value={formData.sortOrder}
                 onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900"
                 min="0"
               />
             </div>
@@ -174,7 +184,7 @@ const AdminNewCategoryPage: React.FC = () => {
                 name="isActive"
                 value={formData.isActive.toString()}
                 onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900"
               >
                 <option value="true">Active</option>
                 <option value="false">Inactive</option>
@@ -190,7 +200,7 @@ const AdminNewCategoryPage: React.FC = () => {
                 name="metaTitle"
                 value={formData.metaTitle}
                 onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900"
                 placeholder="SEO title"
               />
             </div>
@@ -204,7 +214,7 @@ const AdminNewCategoryPage: React.FC = () => {
                 value={formData.metaDescription}
                 onChange={handleInputChange}
                 rows={2}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900"
                 placeholder="SEO description"
               />
             </div>

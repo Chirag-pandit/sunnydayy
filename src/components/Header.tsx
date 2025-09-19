@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Sun, Search, User,Heart, ShoppingCart, X } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { api } from '../api/client';
 
 interface Product {
   id: number;
@@ -29,6 +30,9 @@ const Header = () => {
   const { cartCount } = useCart();
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [showCategories, setShowCategories] = useState(false);
+  const categoriesRef = useRef<HTMLDivElement>(null);
+  const [categories, setCategories] = useState<{ id: string; name: string; slug?: string }[]>([]);
 
   // Close search when clicking outside
   useEffect(() => {
@@ -56,6 +60,40 @@ const Header = () => {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Close categories when clicking outside
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      if (categoriesRef.current && !categoriesRef.current.contains(e.target as Node)) {
+        setShowCategories(false);
+      }
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, []);
+
+  // Load categories for navbar dropdown
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await api<any>(`/categories`);
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray((data as any).categories)
+          ? (data as any).categories
+          : Array.isArray((data as any).data)
+          ? (data as any).data
+          : [];
+        const mapped = list
+          .map((c: any) => ({ id: c._id || c.id || c.slug || c.name, name: c.name || c.title || c.slug, slug: c.slug }))
+          .filter((c: any) => c.id && c.name);
+        setCategories(mapped);
+      } catch (e) {
+        // ignore
+      }
+    };
+    loadCategories();
   }, []);
 
   // Search functionality
@@ -100,24 +138,42 @@ const Header = () => {
           >
             SHOP ALL
           </Link>
-          <Link 
-            to="/products/category/tshirt" 
-            className={`hover:text-red-500 transition-colors ${location.pathname.includes('/tshirt') ? 'text-red-500' : ''}`}
+          <div 
+            className="relative"
+            ref={categoriesRef}
+            onMouseEnter={() => setShowCategories(true)}
           >
-            T-SHIRTS
-          </Link>
-          <Link 
-            to="/products/category/shorts" 
-            className={`hover:text-red-500 transition-colors ${location.pathname.includes('/shorts') ? 'text-red-500' : ''}`}
-          >
-            SHORTS
-          </Link>
-          <Link 
-            to="/products/category/hoodie" 
-            className={`hover:text-red-500 transition-colors ${location.pathname.includes('/hoodie') ? 'text-red-500' : ''}`}
-          >
-            HOODIES
-          </Link>
+            <button 
+              className={`inline-flex items-center gap-1 hover:text-red-500 transition-colors ${location.pathname.includes('/products/category') ? 'text-red-500' : ''}`}
+              aria-haspopup="true"
+              aria-expanded={showCategories}
+              onClick={() => setShowCategories((v) => !v)}
+            >
+              CATEGORIES
+              <svg className={`w-4 h-4 transition-transform ${showCategories ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.085l3.71-3.854a.75.75 0 011.08 1.04l-4.24 4.4a.75.75 0 01-1.08 0l-4.24-4.4a.75.75 0 01.02-1.06z" clipRule="evenodd"/></svg>
+            </button>
+            {showCategories && (
+              <div className="absolute left-0 mt-2 w-56 bg-white text-black rounded-md shadow-lg ring-1 ring-black/5 z-40"
+                   onMouseEnter={() => setShowCategories(true)}>
+                <div className="py-2 max-h-80 overflow-y-auto">
+                  {categories.length === 0 ? (
+                    <div className="px-4 py-2 text-sm text-gray-500">No categories</div>
+                  ) : (
+                    categories.map((c) => (
+                      <Link
+                        key={c.id}
+                        to={`/products/category/${encodeURIComponent((c.slug || c.name).toLowerCase())}`}
+                        className="block px-4 py-2 text-sm hover:bg-gray-100"
+                        onClick={() => setShowCategories(false)}
+                      >
+                        {c.name}
+                      </Link>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           <Link 
             to="/contact" 
             className={`hover:text-red-500 transition-colors ${location.pathname === '/contact' ? 'text-red-500' : ''}`}

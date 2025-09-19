@@ -27,6 +27,7 @@ import AdminLayout from "./components/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
 import { auth } from "./lib/firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
+import { setUserId } from "./api/client";
 
 // Login Route
 function LoginRoute() {
@@ -65,6 +66,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 const App: React.FC = () => {
+  // Keep API client user id in sync with Firebase auth
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUserId(u?.uid || 'guest');
+    });
+    return () => unsub();
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>

@@ -6,10 +6,11 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 const NewProductPage: React.FC = () => {
   const navigate = useNavigate();
   const [name, setName] = useState('');
+  const [sku, setSku] = useState('');
+  const [brand, setBrand] = useState('');
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('');
   const [categories, setCategories] = useState<{ _id: string; name: string }[]>([]);
-  const [productType, setProductType] = useState('');
   const [stock, setStock] = useState('');
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<File[]>([]);
@@ -45,7 +46,7 @@ const NewProductPage: React.FC = () => {
     e.preventDefault();
     setError(null);
 
-    if (!name || !price || !category || !stock || images.length === 0) {
+    if (!name || !sku || !brand || !price || !category || !stock || images.length === 0) {
       setError('Please fill all fields and upload at least one image.');
       return;
     }
@@ -53,29 +54,46 @@ const NewProductPage: React.FC = () => {
     setUploading(true);
 
     try {
-      // This is a simplified example. In a real app, you'd upload to a service like Cloudinary or S3.
-      // For now, we'll simulate an upload and just send placeholder URLs.
-      const imageUrls = images.map(img => ({ url: `https://via.placeholder.com/150?text=${encodeURIComponent(img.name)}` }));
+      // 1) Upload selected images to backend (multer)
+      const form = new FormData();
+      images.forEach((file) => form.append('images', file));
+      const uploadRes = await fetch(`${API_BASE}/uploads/multiple`, {
+        method: 'POST',
+        body: form,
+      });
+      if (!uploadRes.ok) {
+        const text = await uploadRes.text().catch(() => '');
+        throw new Error(text || 'Failed to upload images');
+      }
+      const uploadData = await uploadRes.json();
+      const imageUrls: string[] = Array.isArray(uploadData?.files)
+        ? uploadData.files.map((f: any) => f.url).filter(Boolean)
+        : [];
+      if (imageUrls.length === 0) throw new Error('No images were uploaded');
 
-      const response = await fetch(`${API_BASE}/admin/products`, {
+      // 2) Create product with uploaded image URLs
+      const response = await fetch(`${API_BASE}/products`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name,
-          price: parseFloat(price),
-          category, // category name
-          productType, // tshirt | shorts | other
-          stock: parseInt(stock, 10),
           description,
-          images: imageUrls,
+          price: parseFloat(price),
+          images: imageUrls, // array<string> of /uploads/...
+          category, // Category ObjectId
+          stock: parseInt(stock, 10),
+          sku, // required by backend
+          brand, // required by backend
         }),
       });
 
       if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || 'Failed to create product');
+        const text = await response.text();
+        let message = 'Failed to create product';
+        try { const data = JSON.parse(text); if (data?.message) message = data.message; } catch {}
+        throw new Error(message);
       }
 
       alert('Product created successfully!');
@@ -94,7 +112,7 @@ const NewProductPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="py-8">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
           <h1 className="text-xl font-semibold text-gray-900">Add New Product</h1>
@@ -107,25 +125,25 @@ const NewProductPage: React.FC = () => {
           <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
             <div className="sm:col-span-4">
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">Product Name</label>
-              <input type="text" id="name" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+              <input type="text" id="name" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900" />
             </div>
 
             <div className="sm:col-span-2">
-              <label htmlFor="productType" className="block text-sm font-medium text-gray-700">Product Type</label>
-              <select id="productType" value={productType} onChange={e => setProductType(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                <option value="">Select type</option>
-                <option value="tshirt">T-shirt</option>
-                <option value="shorts">Shorts</option>
-                <option value="other">Other</option>
-              </select>
+              <label htmlFor="sku" className="block text-sm font-medium text-gray-700">SKU</label>
+              <input type="text" id="sku" value={sku} onChange={e => setSku(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900" placeholder="Unique identifier" />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label htmlFor="brand" className="block text-sm font-medium text-gray-700">Brand</label>
+              <input type="text" id="brand" value={brand} onChange={e => setBrand(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900" placeholder="e.g., SunnyDay" />
             </div>
 
             <div className="sm:col-span-2">
               <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
-              <select id="category" value={category} onChange={e => setCategory(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+              <select id="category" value={category} onChange={e => setCategory(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900">
                 <option value="">Select category</option>
                 {categories.map(c => (
-                  <option key={c._id} value={c.name}>{c.name}</option>
+                  <option key={c._id} value={c._id}>{c.name}</option>
                 ))}
               </select>
               <p className="mt-1 text-xs text-gray-500">Manage categories under Admin → Categories.</p>
@@ -133,17 +151,17 @@ const NewProductPage: React.FC = () => {
 
             <div className="sm:col-span-3">
               <label htmlFor="price" className="block text-sm font-medium text-gray-700">Price (₹)</label>
-              <input type="number" id="price" value={price} onChange={e => setPrice(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+              <input type="number" id="price" value={price} onChange={e => setPrice(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900" />
             </div>
 
             <div className="sm:col-span-3">
               <label htmlFor="stock" className="block text-sm font-medium text-gray-700">Stock Quantity</label>
-              <input type="number" id="stock" value={stock} onChange={e => setStock(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+              <input type="number" id="stock" value={stock} onChange={e => setStock(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900" />
             </div>
 
             <div className="sm:col-span-6">
               <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-              <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} rows={4} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+              <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} rows={4} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900" />
             </div>
 
             <div className="sm:col-span-6">
@@ -154,12 +172,20 @@ const NewProductPage: React.FC = () => {
                   <div className="flex text-sm text-gray-600">
                     <label htmlFor="file-upload" className="relative cursor-pointer rounded-md bg-white font-medium text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 hover:text-indigo-500">
                       <span>Upload files</span>
-                      <input id="file-upload" name="file-upload" type="file" multiple className="sr-only" onChange={handleImageChange} />
+                      <input id="file-upload" name="file-upload" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" multiple className="sr-only" onChange={handleImageChange} />
                     </label>
                     <p className="pl-1">or drag and drop</p>
                   </div>
                   <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                  {images.length > 0 && <p className="text-sm text-green-600">{images.length} file(s) selected</p>}
+                  {images.length > 0 && (
+                    <div className="mt-3 grid grid-cols-3 gap-3">
+                      {images.map((f, i) => (
+                        <div key={i} className="w-24 h-24 bg-gray-100 rounded overflow-hidden">
+                          <img src={URL.createObjectURL(f)} alt={f.name} className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

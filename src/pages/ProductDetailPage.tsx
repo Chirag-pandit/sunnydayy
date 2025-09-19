@@ -7,7 +7,25 @@ import { motion } from "framer-motion"
 import { ChevronLeft, ChevronRight, ShoppingCart, Heart, Star, ChevronDown, Truck, Shield } from "lucide-react"
 import { useCart } from "../context/CartContext"
 import { useWishlist } from "../context/WishlistContext"
-import { allProducts } from "../data/products"
+import { api } from "../api/client"
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
+const API_ORIGIN = (() => { try { return new URL(API_BASE).origin; } catch { return 'http://localhost:5000'; } })();
+
+type BackendProduct = {
+  _id: string;
+  name: string;
+  price: number;
+  originalPrice?: number;
+  stock: number;
+  description?: string;
+  images: Array<string | { url: string }>;
+  rating?: number;
+  colors?: string[];
+  sizes?: string[];
+  isNew?: boolean;
+  inStock?: boolean;
+};
 
 const fadeIn = {
   hidden: { opacity: 0 },
@@ -20,8 +38,7 @@ const ProductDetailPage: React.FC = () => {
   const { cartItems, addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
 
-  const productId = id ? parseInt(id, 10) : null
-  const product = allProducts.find((p) => p.id === productId)
+  const [product, setProduct] = useState<BackendProduct | null>(null)
 
   const [selectedColor, setSelectedColor] = useState<string>("")
   const [selectedSize, setSelectedSize] = useState<string>("")
@@ -32,25 +49,58 @@ const ProductDetailPage: React.FC = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0)
-    if (!product && id) {
-      navigate("/products")
-      return
+    const load = async () => {
+      if (!id) return
+      try {
+        // fetch single product
+        const data = await api<any>(`/products/${id}`)
+        const raw = data?.product || data
+        if (!raw?._id) {
+          navigate("/products")
+          return
+        }
+        const imagesArr: Array<string> = Array.isArray(raw.images) ? raw.images.map((im: any) => (typeof im === 'string' ? im : im?.url || '')) : []
+        const norm = (src: string) => {
+          const s = (src || '').trim()
+          const abs = /^https?:\/\//i.test(s)
+          const rel = !abs && s.startsWith('/')
+          const upNoSlash = !abs && !rel && s.toLowerCase().startsWith('uploads/')
+          if (rel) return `${API_ORIGIN}${s}`
+          if (upNoSlash) return `${API_ORIGIN}/${s}`
+          return abs ? s : ''
+        }
+        const normalizedImgs = imagesArr.map(norm).filter(Boolean)
+        const mapped: BackendProduct = {
+          _id: String(raw._id),
+          name: raw.name,
+          price: Number(raw.price),
+          originalPrice: raw.originalPrice,
+          stock: raw.stock ?? 0,
+          description: raw.description,
+          images: normalizedImgs.length > 0 ? normalizedImgs : ['https://placehold.co/800x800?text=Product'],
+          rating: typeof raw.rating === 'number' ? raw.rating : undefined,
+          colors: Array.isArray(raw.colors) ? raw.colors : undefined,
+          sizes: Array.isArray(raw.sizes) ? raw.sizes : undefined,
+          isNew: Boolean(raw.isNew),
+          inStock: typeof raw.inStock === 'boolean' ? raw.inStock : undefined,
+        }
+        setProduct(mapped)
+        setMainImage(mapped.images[0] as string)
+      } catch (e) {
+        navigate('/products')
+      }
     }
-    if (product) {
-      setSelectedColor(product.colors[0])
-      setSelectedSize(product.sizes[0])
-      setMainImage(product.images[0])
-    }
-  }, [product, id, navigate])
+    load()
+  }, [id, navigate])
 
   const handleAddToCart = async () => {
     if (!product) return
     setIsAddingToCart(true)
     await addToCart({
-      productId: product.id,
+      productId: product._id,
       name: product.name,
       price: product.price,
-      image: product.images[0] || "",
+      image: (product.images[0] as string) || "",
       size: selectedSize,
       color: selectedColor,
       quantity: quantity
@@ -61,14 +111,15 @@ const ProductDetailPage: React.FC = () => {
 
   const handleWishlistToggle = () => {
     if (!product) return
-    if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id)
+    const idForWish = (product as any)?.id ?? product._id
+    if (isInWishlist(idForWish)) {
+      removeFromWishlist(idForWish)
     } else {
       addToWishlist({
-        id: product.id,
+        id: idForWish,
         name: product.name,
         price: product.price,
-        images: product.images,
+        images: product.images as string[],
       })
     }
   }
@@ -89,13 +140,14 @@ const ProductDetailPage: React.FC = () => {
     )
   }
 
-  const relatedProducts = allProducts.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4)
-  const currentIndex = allProducts.findIndex((p) => p.id === productId)
-  const prevProduct = currentIndex > 0 ? allProducts[currentIndex - 1] : null
-  const nextProduct = currentIndex < allProducts.length - 1 ? allProducts[currentIndex + 1] : null
+  // Related products and prev/next from static data removed for now
+  const relatedProducts: any[] = []
+  const prevProduct = null
+  const nextProduct = null
 
+  const pid = (product as any)?.id ?? product._id
   const isInCart = cartItems.some(
-    (item) => item.productId === product.id && item.size === selectedSize && item.color === selectedColor,
+    (item) => item.productId === pid,
   )
 
   return (
@@ -118,7 +170,7 @@ const ProductDetailPage: React.FC = () => {
               <img src={mainImage || "/placeholder.svg"} alt={product.name} className="w-full h-[400px] md:h-[500px] object-cover" />
             </div>
             <div className="flex space-x-4 overflow-x-auto pb-2">
-              {product.images.map((img, index) => (
+              {(product.images as string[]).map((img, index) => (
                 <button
                   key={index}
                   className={`flex-shrink-0 w-24 h-24 rounded-md overflow-hidden border-2 ${mainImage === img ? "border-red-500" : "border-transparent"}`}
@@ -135,16 +187,16 @@ const ProductDetailPage: React.FC = () => {
             <div>
               <div className="flex justify-between items-start">
                 <h1 className="text-3xl font-bold text-gray-100">{product.name}</h1>
-                <button className="text-gray-300 hover:text-red-500 transition-colors" aria-label={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"} onClick={handleWishlistToggle}>
-                  <Heart size={24} fill={isInWishlist(product.id) ? "currentColor" : "none"} className={isInWishlist(product.id) ? "text-red-500" : ""} />
+                <button className="text-gray-300 hover:text-red-500 transition-colors" aria-label={isInWishlist(pid) ? "Remove from wishlist" : "Add to wishlist"} onClick={handleWishlistToggle}>
+                  <Heart size={24} fill={isInWishlist(pid) ? "currentColor" : "none"} className={isInWishlist(pid) ? "text-red-500" : ""} />
                 </button>
               </div>
               <div className="flex items-center mt-2 space-x-4">
                 <div className="flex items-center">
                   {[1,2,3,4,5].map(star => (
-                    <Star key={star} size={18} fill={star <= Math.floor(product.rating) ? "currentColor" : "none"} className={star <= Math.floor(product.rating) ? "text-red-500" : "text-gray-400"} />
+                    <Star key={star} size={18} fill={star <= Math.floor(product.rating ?? 4)} className={star <= Math.floor(product.rating ?? 4) ? "text-red-500" : "text-gray-400"} />
                   ))}
-                  <span className="ml-2 text-gray-300">{product.rating.toFixed(1)}</span>
+                  <span className="ml-2 text-gray-300">{(product.rating ?? 4).toFixed(1)}</span>
                 </div>
                 <div className="flex space-x-2">
                   {product.isNew && <span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">NEW</span>}
@@ -166,57 +218,61 @@ const ProductDetailPage: React.FC = () => {
             <p className="text-gray-300">{product.description}</p>
 
             {/* Color selection */}
-            <div>
-              <h3 className="text-gray-100 font-medium mb-2">Color:</h3>
-              <div className="flex flex-wrap gap-2">
-                {product.colors.map((color) => (
-                  <button key={color} className={`px-4 py-2 border rounded-md ${selectedColor === color ? "border-red-500 text-red-500" : "border-gray-600 text-gray-300 hover:border-gray-400"}`} onClick={() => setSelectedColor(color)}>{color}</button>
-                ))}
+            {product.colors?.length ? (
+              <div>
+                <h3 className="text-gray-100 font-medium mb-2">Color:</h3>
+                <div className="flex flex-wrap gap-2">
+                  {product.colors.map((color) => (
+                    <button key={color} className={`px-4 py-2 border rounded-md ${selectedColor === color ? "border-red-500 text-red-500" : "border-gray-600 text-gray-300 hover:border-gray-400"}`} onClick={() => setSelectedColor(color)}>{color}</button>
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : null}
 
             {/* Size selection */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-gray-100 font-medium">Size:</h3>
-                <button className="text-red-500 text-sm flex items-center" onClick={() => setShowSizeChart(v => !v)}>
-                  Size Chart
-                  <ChevronDown size={16} className={`ml-1 transition-transform ${showSizeChart ? "rotate-180" : ""}`} />
-                </button>
-              </div>
-
-              {showSizeChart && (
-                <div className="bg-gray-800 p-4 rounded-md mb-4">
-                  <h4 className="text-gray-100 font-medium mb-2">Size Chart</h4>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-gray-300 text-sm">
-                      <thead>
-                        <tr className="border-b border-gray-700">
-                          <th className="py-2 text-left">Size</th>
-                          <th className="py-2 text-left">Measurement</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.entries({S: '34-36" Chest', M: '38-40" Chest', L: '42-44" Chest', XL: '46-48" Chest', XXL: '50-52" Chest'}).map(([size, measurement]) => (
-                          <tr key={size} className="border-b border-gray-700">
-                            <td className="py-2">{size}</td>
-                            <td className="py-2">{measurement}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex flex-wrap gap-2">
-                {product.sizes.map((size) => (
-                  <button key={size} className={`px-4 py-2 border rounded-md ${selectedSize === size ? "border-red-500 text-red-500" : "border-gray-600 text-gray-300 hover:border-gray-400"}`} onClick={() => setSelectedSize(size)}>
-                    {size}
+            {product.sizes?.length ? (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-gray-100 font-medium">Size:</h3>
+                  <button className="text-red-500 text-sm flex items-center" onClick={() => setShowSizeChart(v => !v)}>
+                    Size Chart
+                    <ChevronDown size={16} className={`ml-1 transition-transform ${showSizeChart ? "rotate-180" : ""}`} />
                   </button>
-                ))}
+                </div>
+
+                {showSizeChart && (
+                  <div className="bg-gray-800 p-4 rounded-md mb-4">
+                    <h4 className="text-gray-100 font-medium mb-2">Size Chart</h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-gray-300 text-sm">
+                        <thead>
+                          <tr className="border-b border-gray-700">
+                            <th className="py-2 text-left">Size</th>
+                            <th className="py-2 text-left">Measurement</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Object.entries({S: '34-36" Chest', M: '38-40" Chest', L: '42-44" Chest', XL: '46-48" Chest', XXL: '50-52" Chest'}).map(([size, measurement]) => (
+                            <tr key={size} className="border-b border-gray-700">
+                              <td className="py-2">{size}</td>
+                              <td className="py-2">{measurement}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-2">
+                  {product.sizes.map((size) => (
+                    <button key={size} className={`px-4 py-2 border rounded-md ${selectedSize === size ? "border-red-500 text-red-500" : "border-gray-600 text-gray-300 hover:border-gray-400"}`} onClick={() => setSelectedSize(size)}>
+                      {size}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : null}
 
             {/* Add to cart */}
             <div className="flex flex-col sm:flex-row gap-4">
