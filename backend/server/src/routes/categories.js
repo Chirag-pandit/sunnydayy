@@ -86,6 +86,18 @@ router.post("/", async (req, res) => {
     res.status(201).json(category);
   } catch (error) {
     console.error("Error creating category:", error);
+    // Duplicate key error
+    if (error && error.code === 11000) {
+      const fields = Object.keys(error.keyPattern || {});
+      const field = fields[0] || 'field';
+      return res.status(400).json({ message: `A category with this ${field} already exists` });
+    }
+    // Mongoose validation error
+    if (error && error.name === 'ValidationError') {
+      const first = Object.values(error.errors || {})[0];
+      const msg = first?.message || 'Validation failed';
+      return res.status(400).json({ message: msg });
+    }
     res.status(500).json({ message: "Failed to create category" });
   }
 });
@@ -131,6 +143,16 @@ router.put("/:id", async (req, res) => {
     res.json(category);
   } catch (error) {
     console.error("Error updating category:", error);
+    if (error && error.code === 11000) {
+      const fields = Object.keys(error.keyPattern || {});
+      const field = fields[0] || 'field';
+      return res.status(400).json({ message: `A category with this ${field} already exists` });
+    }
+    if (error && error.name === 'ValidationError') {
+      const first = Object.values(error.errors || {})[0];
+      const msg = first?.message || 'Validation failed';
+      return res.status(400).json({ message: msg });
+    }
     res.status(500).json({ message: "Failed to update category" });
   }
 });

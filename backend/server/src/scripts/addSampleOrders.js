@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
@@ -152,7 +153,15 @@ const sampleOrders = [
 async function addSampleOrders() {
   try {
     // Connect to MongoDB
-    const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/sunnydayy';
+    let MONGODB_URI = process.env.MONGODB_URI;
+    if (!MONGODB_URI) {
+      throw new Error('MONGODB_URI is not set. Please set it in your environment before running this script.');
+    }
+    // ensure URI ends with /sunnydayy if no db name provided (same logic as server)
+    if (!/\/[A-Za-z0-9_\-]+(\?|$)/.test(MONGODB_URI)) {
+      if (MONGODB_URI.endsWith('/')) MONGODB_URI += 'sunnydayy';
+      else MONGODB_URI += '/sunnydayy';
+    }
     await mongoose.connect(MONGODB_URI);
     console.log('Connected to MongoDB');
 

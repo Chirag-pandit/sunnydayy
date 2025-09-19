@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 async function checkMongoDB() {
   try {
-    const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/sunnydayy';
+    const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://sunnydayofficial22_db_user:eeTjtpEkkjX6F3Mk@sunnyday.qbpdhsv.mongodb.net/';
     console.log('Attempting to connect to MongoDB...');
     console.log('URI:', MONGODB_URI);
     
